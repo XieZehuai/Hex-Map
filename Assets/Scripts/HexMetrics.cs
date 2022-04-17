@@ -20,7 +20,7 @@ namespace HexMap
         /// <summary>
         /// 六边形的六个顶点相对于其中心的位置，从最上面的顶点开始，按顺时针方向排列
         /// </summary>
-        public static Vector3[] corners =
+        private static Vector3[] corners =
         {
             new Vector3(0f, 0f, outerRadius),
             new Vector3(innerRadius, 0f, 0.5f * outerRadius),
@@ -28,6 +28,24 @@ namespace HexMap
             new Vector3(0f, 0f, -outerRadius),
             new Vector3(-innerRadius, 0f, -0.5f * outerRadius),
             new Vector3(-innerRadius, 0f, 0.5f * outerRadius),
+            // 这里额外保存第一个顶点，这样在获取下一个角时下标就不用取模
+            new Vector3(0f, 0f, outerRadius),
         };
+
+        /// <summary>
+        /// 获取指定方向上三角形第一个角的坐标
+        /// </summary>
+        public static Vector3 GetFirstCorner(HexDirection direction)
+        {
+            return corners[(int)direction];
+        }
+
+        /// <summary>
+        /// 获取指定方向上三角形第二个角的坐标
+        /// </summary>
+        public static Vector3 GetSecondCorner(HexDirection direction)
+        {
+            return corners[(int)direction + 1];
+        }
     }
 }

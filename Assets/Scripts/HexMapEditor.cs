@@ -36,6 +36,9 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 设置当前选中的颜色
+        /// </summary>
         public void SelectColor(int index)
         {
             activeColor = colors[index];

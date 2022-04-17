@@ -4,9 +4,9 @@ using UnityEngine;
 namespace HexMap
 {
     /// <summary>
-    /// 六角坐标
+    /// 六角坐标，由 x，y，z 三个值组成，且满足 x + y + z = 0
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public struct HexCoordinates
     {
         [SerializeField] private int x;

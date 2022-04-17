@@ -51,20 +51,38 @@ namespace HexMap
         }
 
         /// <summary>
-        /// 为一个单独的单元格生成网格
+        /// 为单元格生成网格
         /// </summary>
         private void Triangulate(HexCell cell)
         {
+            // 在单元格的六个方向上生成三角形
+            for (HexDirection direction = HexDirection.NE; direction <= HexDirection.NW; direction++)
+            {
+                Triangulate(direction, cell);
+            }
+        }
+
+        /// <summary>
+        /// 在单元格的指定方向上生成一个三角形，把单元格看成由六个相同的等边三角形组成，
+        /// 每个方向上对应一个三角形
+        /// </summary>
+        private void Triangulate(HexDirection direction, HexCell cell)
+        {
             Vector3 center = cell.transform.localPosition; // 单元格的中心
 
-			// 一个六边形由6个相同的等腰三角形组成，所以生成六个三角形，每个三角形的第一个顶点
-			// 为六边形的中心，剩下两个顶点为两个角
-            for (int i = 0; i < 6; i++)
-            {
-                AddTriangle(center, center + HexMetrics.corners[i],
-                	center + HexMetrics.corners[(i + 1) % 6]);
-                AddTriangleColor(cell.color);
-            }
+            // 生成三角形，第一个顶点为单元格中心，剩下两个顶点为两个角
+            AddTriangle(center,
+                        center + HexMetrics.GetFirstCorner(direction),
+                        center + HexMetrics.GetSecondCorner(direction));
+
+            // 设置三角形的颜色，中心为单元格的颜色，两个顶点的颜色与相邻的单元格融合
+            HexCell previousNeighbor = cell.GetNeighbor(direction.Previous()) ?? cell;
+            HexCell neighbor = cell.GetNeighbor(direction) ?? cell;
+            HexCell nextNeighbor = cell.GetNeighbor(direction.Next()) ?? cell;
+
+            AddTriangleColor(cell.color,
+                            (cell.color + previousNeighbor.color + neighbor.color) / 3f,
+                            (cell.color + neighbor.color + nextNeighbor.color) / 3f);
         }
 
         /// <summary>
@@ -84,11 +102,11 @@ namespace HexMap
         /// <summary>
         /// 为当前三角形添加三个顶点的颜色
         /// </summary>
-        private void AddTriangleColor(Color color)
+        private void AddTriangleColor(Color c1, Color c2, Color c3)
         {
-            colors.Add(color);
-            colors.Add(color);
-            colors.Add(color);
+            colors.Add(c1);
+            colors.Add(c2);
+            colors.Add(c3);
         }
     }
 }

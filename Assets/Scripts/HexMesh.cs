@@ -79,32 +79,41 @@ namespace HexMap
             AddTriangle(center, v1, v2);
             AddTriangleColor(cell.color);
 
-            // 生成三角形的矩形过渡部分
+            // 生成当前单元格与相邻单元格之间的过渡部分
+            if (direction <= HexDirection.SE)
+            {
+                TriangulateConnection(direction, cell, v1, v2);
+            }
+        }
+
+        /// <summary>
+        /// 生成单元格和其对应方向上的相邻单元格中间的矩形连接部分，以及和当前方向的下一个方向上的邻居
+        /// 之间的三角形连接部分
+        /// </summary>
+        private void TriangulateConnection(HexDirection direction, HexCell cell, Vector3 v1, Vector3 v2)
+        {
+            HexCell neighbor = cell.GetNeighbor(direction);
+            // 如果目标方向上没有相邻的单元格，也就不需要连接部分
+            if (neighbor == null) return;
+
+            // 生成单元格和其对应方向上的相邻单元格中间的矩形连接部分
             Vector3 bridge = HexMetrics.GetBridge(direction);
             Vector3 v3 = v1 + bridge;
             Vector3 v4 = v2 + bridge;
-
-            // 获取当前方向上的三个邻居（一个正对当前方向，两个在当前方向的斜向上），
-            // 让两个顶点的颜色与相邻单元格的颜色融合
-            HexCell neighbor = cell.GetNeighbor(direction) ?? cell;
-            Color bridgeColor = (cell.color + neighbor.color) * 0.5f;
-
             AddQuad(v1, v2, v3, v4);
-            AddQuadColor(cell.color, bridgeColor);
+            AddQuadColor(cell.color, neighbor.color);
 
-            // 生成三角形两个顶点上的小三角形过渡部分
-            Vector3 v5 = center + HexMetrics.GetFirstCorner(direction);
-            Vector3 v6 = center + HexMetrics.GetSecondCorner(direction);
-
-            HexCell previousNeighbor = cell.GetNeighbor(direction.Previous()) ?? cell;
-            HexCell nextNeighbor = cell.GetNeighbor(direction.Next()) ?? cell;
-            Color c5 = (cell.color + previousNeighbor.color + neighbor.color) / 3f;
-            Color c6 = (cell.color + neighbor.color + nextNeighbor.color) / 3f;
-
-            AddTriangle(v1, v5, v3);
-            AddTriangleColor(cell.color, c5, bridgeColor);
-            AddTriangle(v2, v4, v6);
-            AddTriangleColor(cell.color, bridgeColor, c6);
+            // 生成当前单元格、相邻单元格、下一方向相邻单元格，之间的三角形连接部分，并且一个单元格
+            // 有三个矩形连接，但只有两个三角形连接
+            if (direction <= HexDirection.E)
+            {
+                HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
+                if (nextNeighbor != null)
+                {
+                    AddTriangle(v2, v4, v2 + HexMetrics.GetBridge(direction.Next()));
+                    AddTriangleColor(cell.color, neighbor.color, nextNeighbor.color);
+                }
+            }
         }
 
         /// <summary>

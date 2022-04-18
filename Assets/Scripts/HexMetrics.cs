@@ -18,9 +18,19 @@ namespace HexMap
         public const float innerRadius = outerRadius * 0.866025404f;
 
         /// <summary>
+        /// 单元格内固定区域占总大小的比例
+        /// </summary>
+        public const float solidFactor = 0.75f;
+
+        /// <summary>
+        /// 单元格内与相邻单元格之间过渡区域的比例
+        /// </summary>
+        public const float blendFactor = 1f - solidFactor;
+
+        /// <summary>
         /// 六边形的六个顶点相对于其中心的位置，从最上面的顶点开始，按顺时针方向排列
         /// </summary>
-        private static Vector3[] corners =
+        private static readonly Vector3[] corners =
         {
             new Vector3(0f, 0f, outerRadius),
             new Vector3(innerRadius, 0f, 0.5f * outerRadius),
@@ -46,6 +56,22 @@ namespace HexMap
         public static Vector3 GetSecondCorner(HexDirection direction)
         {
             return corners[(int)direction + 1];
+        }
+
+        /// <summary>
+        /// 获取指定方向上三角形固定区域的第一个角的坐标
+        /// </summary>
+        public static Vector3 GetFirstSolidCorner(HexDirection direction)
+        {
+            return corners[(int)direction] * solidFactor;
+        }
+
+        /// <summary>
+        /// 获取指定方向上三角形固定区域的第二个角的坐标
+        /// </summary>
+        public static Vector3 GetSecondSolidCorner(HexDirection direction)
+        {
+            return corners[(int)direction + 1] * solidFactor;
         }
     }
 }

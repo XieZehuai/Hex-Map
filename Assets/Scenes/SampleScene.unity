@@ -181,7 +181,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 2
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 534669904}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -297,6 +297,7 @@ MonoBehaviour:
   cellLabelPrefab: {fileID: 2661020081989523899, guid: 73903002685fed140838a2f8e73d0b04,
     type: 3}
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  showCellLabel: 0
 --- !u!4 &202894367
 Transform:
   m_ObjectHideFlags: 0

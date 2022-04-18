@@ -13,6 +13,7 @@ namespace HexMap
         [SerializeField] private HexCell cellPrefab = default;
         [SerializeField] private Text cellLabelPrefab = default;
         [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
+        [SerializeField] private bool showCellLabel = true;
 
         private HexCell[] cells;
         private Canvas gridCanvas;
@@ -51,7 +52,7 @@ namespace HexMap
         {
             // 计算单元格的位置
             Vector3 position;
-            position.x = (x + z * 0.5f - z / 2) * (HexMetrics.innerRadius * 2f);
+            position.x = (x + (z % 2 == 0 ? 0f : 0.5f)) * (HexMetrics.innerRadius * 2f);
             position.y = 0f;
             position.z = z * (HexMetrics.outerRadius * 1.5f);
 
@@ -87,10 +88,13 @@ namespace HexMap
                 }
             }
 
-            // 现实单元格坐标UI
-            Text label = Instantiate(cellLabelPrefab, gridCanvas.transform);
-            label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
-            label.text = cell.coordinates.ToStringOnSeparateLines();
+            if (showCellLabel)
+            {
+                // 现实单元格坐标UI
+                Text label = Instantiate(cellLabelPrefab, gridCanvas.transform);
+                label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
+                label.text = cell.coordinates.ToStringOnSeparateLines();
+            }
         }
 
         /// <summary>

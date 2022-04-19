@@ -51,5 +51,19 @@ namespace HexMap
             // 注意不能调用cell.SetNeighbor，这样会陷入死循环
             cell.neighbors[(int)direction.Opposite()] = this;
         }
+
+        public HexEdgeType GetEdgeType(HexDirection direction)
+        {
+            return HexMetrics.GetEdgeType(elevation, GetNeighbor(direction).elevation);
+        }
+
+        /// <summary>
+        /// 获取当前单元格与目标单元格之间的连接类型，连接类型只取绝于两者海拔差的绝对值，
+        /// 与谁高谁低无关
+        /// </summary>
+        public HexEdgeType GetEdgeType(HexCell otherCell)
+        {
+            return HexMetrics.GetEdgeType(elevation, otherCell.elevation);
+        }
     }
 }

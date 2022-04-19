@@ -38,6 +38,11 @@ namespace HexMap
             }
         }
 
+        private void OnEnable()
+        {
+            HexMetrics.noiseSource = noiseSource;
+        }
+
         private void Start()
         {
             // 生成网格，因为需要等所有单元格生成完后才能生成网格，所以放在Start里执行
@@ -96,6 +101,8 @@ namespace HexMap
             label.text = cell.coordinates.ToStringOnSeparateLines();
             cell.uiRect = label.rectTransform;
             label.enabled = showCellLabel;
+
+            cell.Elevation = 0;
         }
 
         /// <summary>

@@ -22,7 +22,7 @@ namespace HexMap
         /// <summary>
         /// 单元格内固定区域占总大小的比例
         /// </summary>
-        public const float solidFactor = 0.75f;
+        public const float solidFactor = 0.8f;
 
         /// <summary>
         /// 单元格内与相邻单元格之间过渡区域的比例
@@ -32,7 +32,7 @@ namespace HexMap
         /// <summary>
         /// 每单位海拔的高度
         /// </summary>
-        public const float elevationStep = 5f;
+        public const float elevationStep = 3f;
 
         /// <summary>
         /// 单元格之间连接部分区域的台阶数量
@@ -67,7 +67,9 @@ namespace HexMap
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度
         /// </summary>
-        public const float cellPerturbStrength = 5f;
+        public const float cellPerturbStrength = 4f;
+
+        public const float elevationPerturbStrength = 1f;
 
         #endregion
 

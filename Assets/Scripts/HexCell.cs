@@ -2,13 +2,34 @@
 
 namespace HexMap
 {
-	/// <summary>
-	/// 表示一个独立的六边形单元格，只保存数据，不负责与视觉（模型，网格等）相关的事情
-	/// </summary>
-	public class HexCell : MonoBehaviour
-	{
-		public HexCoordinates coordinates;
+    /// <summary>
+    /// 表示一个独立的六边形单元格，只保存数据，不负责与视觉（模型，网格等）相关的事情
+    /// </summary>
+    public class HexCell : MonoBehaviour
+    {
+        public HexCoordinates coordinates;
         public Color color;
+
+        public int Elevation
+        {
+            get => elevation;
+            set
+            {
+                elevation = value;
+
+                Vector3 position = transform.localPosition;
+                position.y = elevation * HexMetrics.elevationStep;
+                transform.localPosition = position;
+
+                Vector3 uiPosition = uiRect.localPosition;
+                uiPosition.z = -elevation * HexMetrics.elevationStep;
+                uiRect.localPosition = uiPosition;
+            }
+        }
+
+        public RectTransform uiRect;
+
+        private int elevation;
 
         [SerializeField] HexCell[] neighbors = default;
 

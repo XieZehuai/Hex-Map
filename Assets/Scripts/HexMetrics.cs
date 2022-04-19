@@ -28,6 +28,11 @@ namespace HexMap
         public const float blendFactor = 1f - solidFactor;
 
         /// <summary>
+        /// 每单位海拔的高度
+        /// </summary>
+        public const float elevationStep = 5f;
+
+        /// <summary>
         /// 六边形的六个顶点相对于其中心的位置，从最上面的顶点开始，按顺时针方向排列
         /// </summary>
         private static readonly Vector3[] corners =

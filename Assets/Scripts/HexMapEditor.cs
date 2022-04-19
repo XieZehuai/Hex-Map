@@ -12,6 +12,7 @@ namespace HexMap
         public HexGrid hexGrid;
 
         private Color activeColor; // 当前选中的颜色
+        private int activeElevation; // 当前选中的海拔高度
 
         private void Awake()
         {
@@ -32,8 +33,15 @@ namespace HexMap
             Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(inputRay, out RaycastHit hit))
             {
-                hexGrid.ColorCell(hit.point, activeColor);
+                EditCell(hexGrid.GetCell(hit.point));
             }
+        }
+
+        private void EditCell(HexCell cell)
+        {
+            cell.color = activeColor;
+            cell.Elevation = activeElevation;
+            hexGrid.Refresh();
         }
 
         /// <summary>
@@ -42,6 +50,14 @@ namespace HexMap
         public void SelectColor(int index)
         {
             activeColor = colors[index];
+        }
+
+        /// <summary>
+        /// 设置当前选中的海拔高度
+        /// </summary>
+        public void SetElevation(float elevation)
+        {
+            activeElevation = (int)elevation;
         }
     }
 }

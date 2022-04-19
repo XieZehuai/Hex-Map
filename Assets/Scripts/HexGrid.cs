@@ -88,33 +88,33 @@ namespace HexMap
                 }
             }
 
-            if (showCellLabel)
-            {
-                // 现实单元格坐标UI
-                Text label = Instantiate(cellLabelPrefab, gridCanvas.transform);
-                label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
-                label.text = cell.coordinates.ToStringOnSeparateLines();
-            }
+            // 现实单元格坐标UI
+            Text label = Instantiate(cellLabelPrefab, gridCanvas.transform);
+            label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
+            label.text = cell.coordinates.ToStringOnSeparateLines();
+            cell.uiRect = label.rectTransform;
+            label.enabled = showCellLabel;
         }
 
         /// <summary>
-        /// 改变目标单元格的颜色
+        /// 获取目标位置对应的单元格
         /// </summary>
-        /// <param name="position">单元格在世界空间下的坐标</param>
-        /// <param name="color">要改变的颜色</param>
-        public void ColorCell(Vector3 position, Color color)
+        /// <param name="position">世界空间下坐标，坐标范围须在地图网格内</param>
+        public HexCell GetCell(Vector3 position)
         {
             // 为避免当前物体位移对于点击位置坐标的影响，把点击坐标转换到以当前物体
             // 为原点的坐标空间下再计算六角坐标
             position = transform.InverseTransformPoint(position);
             HexCoordinates coordinates = HexCoordinates.FromPosition(position);
-
-            // 改变点击单元格的颜色
             int index = coordinates.X + coordinates.Z * width + coordinates.Z / 2;
-            HexCell cell = cells[index];
-            cell.color = color;
+            return cells[index];
+        }
 
-            // 重建整个网格（可以优化）
+        /// <summary>
+        /// 刷新地图
+        /// </summary>
+        public void Refresh()
+        {
             hexMesh.Triangulate(cells);
         }
     }

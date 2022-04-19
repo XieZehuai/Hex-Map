@@ -14,6 +14,7 @@ namespace HexMap
         [SerializeField] private Text cellLabelPrefab = default;
         [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
         [SerializeField] private bool showCellLabel = true;
+        [SerializeField] private Texture2D noiseSource = default;
 
         private HexCell[] cells;
         private Canvas gridCanvas;
@@ -21,6 +22,7 @@ namespace HexMap
 
         private void Awake()
         {
+            HexMetrics.noiseSource = noiseSource;
             gridCanvas = GetComponentInChildren<Canvas>();
             hexMesh = GetComponentInChildren<HexMesh>();
 

@@ -7,6 +7,8 @@ namespace HexMap
     /// </summary>
     public static class HexMetrics
     {
+        #region 常量
+
         /// <summary>
         /// 把六边形看成由六个相同的等边三角形组成，outerRadius就是每个三角形的边长
         /// </summary>
@@ -54,6 +56,20 @@ namespace HexMap
             // 这里额外保存第一个顶点，这样在获取下一个角时下标就不用取模
             new Vector3(0f, 0f, outerRadius),
         };
+
+        /// <summary>
+        /// 噪声图，用该图产生噪声
+        /// </summary>
+        public static Texture2D noiseSource;
+
+        public const float noiseScale = 0.003f;
+
+        /// <summary>
+        /// 网格顶点位置被噪声扰动的强度
+        /// </summary>
+        public const float cellPerturbStrength = 5f;
+
+        #endregion
 
         /// <summary>
         /// 获取指定方向上三角形第一个角的坐标
@@ -114,6 +130,14 @@ namespace HexMap
         {
             int delta = Mathf.Abs(elevation1 - elevation2);
             return delta == 0 ? HexEdgeType.Flat : delta == 1 ? HexEdgeType.Slope : HexEdgeType.Cliff;
+        }
+
+        /// <summary>
+        /// 采样噪声图
+        /// </summary>
+        public static Vector4 SampleNoise(Vector3 position)
+        {
+            return noiseSource.GetPixelBilinear(position.x * noiseScale, position.z * noiseScale);
         }
     }
 }

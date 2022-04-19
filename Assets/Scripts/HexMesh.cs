@@ -329,9 +329,9 @@ namespace HexMap
         {
             int vertexIndex = vertices.Count;
 
-            vertices.Add(v1);
-            vertices.Add(v2);
-            vertices.Add(v3);
+            vertices.Add(Perturb(v1));
+            vertices.Add(Perturb(v2));
+            vertices.Add(Perturb(v3));
 
             triangles.Add(vertexIndex);
             triangles.Add(vertexIndex + 1);
@@ -366,10 +366,10 @@ namespace HexMap
         {
             int vertexIndex = vertices.Count;
 
-            vertices.Add(v1);
-            vertices.Add(v2);
-            vertices.Add(v3);
-            vertices.Add(v4);
+            vertices.Add(Perturb(v1));
+            vertices.Add(Perturb(v2));
+            vertices.Add(Perturb(v3));
+            vertices.Add(Perturb(v4));
 
             triangles.Add(vertexIndex);
             triangles.Add(vertexIndex + 2);
@@ -401,6 +401,18 @@ namespace HexMap
             colors.Add(c1);
             colors.Add(c2);
             colors.Add(c2);
+        }
+
+        /// <summary>
+        /// 使用噪声扰动顶点的位置，形成不规则的六边形
+        /// </summary>
+        private Vector3 Perturb(Vector3 position)
+        {
+            Vector4 sample = (HexMetrics.SampleNoise(position) * 2f - Vector4.one) * HexMetrics.cellPerturbStrength;
+            position.x += sample.x;
+            position.y += sample.y;
+            position.z += sample.z;
+            return position;
         }
     }
 }

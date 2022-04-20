@@ -22,6 +22,9 @@ namespace HexMap
         private HexCell[] cells;
         private HexGridChunk[] chunks;
 
+        public int ChunkCountX => chunkCountX;
+        public int ChunkCountZ => chunkCountZ;
+
         private void Awake()
         {
             HexMetrics.noiseSource = noiseSource;

@@ -362,11 +362,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fda7d8e0e11fb74cbef2635ea0cfa83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 6
-  height: 6
+  chunkCountX: 4
+  chunkCountZ: 3
   cellPrefab: {fileID: 2253848768794651007, guid: 350cbb9806f8af04d884b1a2f3208c5d,
     type: 3}
   cellLabelPrefab: {fileID: 2661020081989523899, guid: 73903002685fed140838a2f8e73d0b04,
+    type: 3}
+  chunkPrefab: {fileID: 8266012465426326501, guid: 29e907bac2129dd449902769013a7941,
     type: 3}
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
   showCellLabel: 0
@@ -778,7 +780,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 44.6, y: 83, z: 37.1}
+  m_LocalPosition: {x: 166.5, y: 203.7, z: 105.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2184,10 +2186,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   colors:
-  - {r: 0.8396226, g: 0.8396226, b: 0.1782218, a: 1}
-  - {r: 0, g: 0.7169812, b: 0, a: 1}
-  - {r: 0.21226415, g: 0.21226415, b: 0.8490566, a: 1}
-  - {r: 0.8584906, g: 0.8584906, b: 0.8584906, a: 1}
+  - {r: 0.8679245, g: 0.7613755, b: 0.11053756, a: 1}
+  - {r: 0.11369702, g: 0.6886792, b: 0.11369702, a: 1}
+  - {r: 0.28826985, g: 0.28826985, b: 0.7735849, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
   hexGrid: {fileID: 202894366}
 --- !u!1 &2126257646
 GameObject:

@@ -4,38 +4,33 @@ using UnityEngine.UI;
 namespace HexMap
 {
     /// <summary>
-    /// 表示由六边形单元格组成的地图
+    /// 表示一个完整的六边形地图
     /// </summary>
     public class HexGrid : MonoBehaviour
     {
-        [SerializeField] private int width = 6;
-        [SerializeField] private int height = 6;
+        [SerializeField] private int chunkCountX = 4;
+        [SerializeField] private int chunkCountZ = 3;
         [SerializeField] private HexCell cellPrefab = default;
         [SerializeField] private Text cellLabelPrefab = default;
+        [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
         [SerializeField] private bool showCellLabel = true;
         [SerializeField] private Texture2D noiseSource = default;
 
+        private int cellCountX;
+        private int cellCountZ;
         private HexCell[] cells;
-        private Canvas gridCanvas;
-        private HexMesh hexMesh;
+        private HexGridChunk[] chunks;
 
         private void Awake()
         {
             HexMetrics.noiseSource = noiseSource;
-            gridCanvas = GetComponentInChildren<Canvas>();
-            hexMesh = GetComponentInChildren<HexMesh>();
 
-            // 生成单元格，按 width * height 的大小生成一个 2 维的地图，再在 CreateCell 方法里
-            // 调整单元格的坐标，使其交错形成六边形地图
-            cells = new HexCell[height * width];
-            for (int z = 0, i = 0; z < height; z++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    CreateCell(x, z, i++);
-                }
-            }
+            cellCountX = chunkCountX * HexMetrics.chunkSizeX;
+            cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ;
+
+            CreateChunks();
+            CreateCells();
         }
 
         private void OnEnable()
@@ -43,10 +38,34 @@ namespace HexMap
             HexMetrics.noiseSource = noiseSource;
         }
 
-        private void Start()
+        private void CreateChunks()
         {
-            // 生成网格，因为需要等所有单元格生成完后才能生成网格，所以放在Start里执行
-            hexMesh.Triangulate(cells);
+            chunks = new HexGridChunk[chunkCountX * chunkCountZ];
+
+            for (int z = 0, i = 0; z < chunkCountZ; z++)
+            {
+                for (int x = 0; x < chunkCountX; x++, i++)
+                {
+                    HexGridChunk chunk = chunks[i] = Instantiate(chunkPrefab, transform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 生成单元格，按 cellCountX * cellCountZ 的大小生成一个 2 维的地图，再在 CreateCell 方法里
+        /// 调整单元格的坐标，使其交错形成六边形地图
+        /// </summary>
+        private void CreateCells()
+        {
+            cells = new HexCell[cellCountZ * cellCountX];
+
+            for (int z = 0, i = 0; z < cellCountZ; z++)
+            {
+                for (int x = 0; x < cellCountX; x++)
+                {
+                    CreateCell(x, z, i++);
+                }
+            }
         }
 
         /// <summary>
@@ -64,10 +83,10 @@ namespace HexMap
             position.z = z * (HexMetrics.outerRadius * 1.5f);
 
             // 创建单元格
-            HexCell cell = cells[i] = Instantiate(cellPrefab, transform);
+            HexCell cell = cells[i] = Instantiate(cellPrefab);
             cell.transform.localPosition = position;
             cell.coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
-            cell.color = defaultColor;
+            cell.Color = defaultColor;
             cell.name = "Hex Cell " + cell.coordinates.ToString();
 
             // 设置单元格对应的邻居关系
@@ -79,30 +98,43 @@ namespace HexMap
             {
                 if (z % 2 == 0)
                 {
-                    cell.SetNeighbor(HexDirection.SE, cells[i - width]);
+                    cell.SetNeighbor(HexDirection.SE, cells[i - cellCountX]);
                     if (x > 0)
                     {
-                        cell.SetNeighbor(HexDirection.SW, cells[i - width - 1]);
+                        cell.SetNeighbor(HexDirection.SW, cells[i - cellCountX - 1]);
                     }
                 }
                 else
                 {
-                    cell.SetNeighbor(HexDirection.SW, cells[i - width]);
-                    if (x < width - 1)
+                    cell.SetNeighbor(HexDirection.SW, cells[i - cellCountX]);
+                    if (x < cellCountX - 1)
                     {
-                        cell.SetNeighbor(HexDirection.SE, cells[i - width + 1]);
+                        cell.SetNeighbor(HexDirection.SE, cells[i - cellCountX + 1]);
                     }
                 }
             }
 
             // 现实单元格坐标UI
-            Text label = Instantiate(cellLabelPrefab, gridCanvas.transform);
+            Text label = Instantiate(cellLabelPrefab);
             label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
             label.text = cell.coordinates.ToStringOnSeparateLines();
             cell.uiRect = label.rectTransform;
             label.enabled = showCellLabel;
 
             cell.Elevation = 0;
+
+            AddCellToChunk(x, z, cell);
+        }
+
+        private void AddCellToChunk(int x, int z, HexCell cell)
+        {
+            int chunkX = x / HexMetrics.chunkSizeX;
+            int chunkZ = z / HexMetrics.chunkSizeZ;
+            HexGridChunk chunk = chunks[chunkX + chunkZ * chunkCountX];
+
+            int localX = x - chunkX * HexMetrics.chunkSizeX;
+            int localZ = z - chunkZ * HexMetrics.chunkSizeZ;
+            chunk.AddCell(localX + localZ * HexMetrics.chunkSizeX, cell);
         }
 
         /// <summary>
@@ -115,16 +147,8 @@ namespace HexMap
             // 为原点的坐标空间下再计算六角坐标
             position = transform.InverseTransformPoint(position);
             HexCoordinates coordinates = HexCoordinates.FromPosition(position);
-            int index = coordinates.X + coordinates.Z * width + coordinates.Z / 2;
+            int index = coordinates.X + coordinates.Z * cellCountX + coordinates.Z / 2;
             return cells[index];
-        }
-
-        /// <summary>
-        /// 刷新地图
-        /// </summary>
-        public void Refresh()
-        {
-            hexMesh.Triangulate(cells);
         }
     }
 }

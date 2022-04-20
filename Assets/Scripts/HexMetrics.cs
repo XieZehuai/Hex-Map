@@ -69,7 +69,12 @@ namespace HexMap
         /// </summary>
         public const float cellPerturbStrength = 4f;
 
-        public const float elevationPerturbStrength = 1f;
+        public const float elevationPerturbStrength = 1.5f;
+
+        /// <summary>
+        /// 每块六边形地图的大小，因为单个网格支持的顶点数量有限，所以需要把地图分块
+        /// </summary>
+        public const int chunkSizeX = 5, chunkSizeZ = 5;
 
         #endregion
 

@@ -7,14 +7,31 @@ namespace HexMap
     /// </summary>
     public class HexCell : MonoBehaviour
     {
+        [SerializeField] private HexCell[] neighbors = default;
+
         public HexCoordinates coordinates;
-        public Color color;
+        public HexGridChunk chunk;
+        public RectTransform uiRect;
+
+        public Color Color
+        {
+            get => color;
+            set
+            {
+                if (color == value) return;
+
+                color = value;
+                Refresh();
+            }
+        }
 
         public int Elevation
         {
             get => elevation;
             set
             {
+                if (elevation == value) return;
+
                 elevation = value;
 
                 Vector3 position = transform.localPosition;
@@ -25,16 +42,15 @@ namespace HexMap
                 Vector3 uiPosition = uiRect.localPosition;
                 uiPosition.z = -position.y;
                 uiRect.localPosition = uiPosition;
+
+                Refresh();
             }
         }
 
         public Vector3 Position => transform.localPosition;
 
-        public RectTransform uiRect;
-
-        private int elevation;
-
-        [SerializeField] HexCell[] neighbors = default;
+        private int elevation = int.MinValue;
+        private Color color;
 
         /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null
@@ -67,6 +83,22 @@ namespace HexMap
         public HexEdgeType GetEdgeType(HexCell otherCell)
         {
             return HexMetrics.GetEdgeType(elevation, otherCell.elevation);
+        }
+
+        private void Refresh()
+        {
+            if (chunk != null)
+            {
+                chunk.Refresh();
+                
+                for (int i = 0; i < neighbors.Length; i++)
+                {
+                    if (neighbors[i] != null && neighbors[i].chunk != chunk)
+                    {
+                        neighbors[i].chunk.Refresh();
+                    }
+                }
+            }
         }
     }
 }

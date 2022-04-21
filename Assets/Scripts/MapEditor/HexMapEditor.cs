@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace HexMap
+namespace HexMap.Editor
 {
     /// <summary>
     /// 六边形地图编辑器
@@ -16,6 +16,7 @@ namespace HexMap
         private bool applyElevation = true;
         private int activeElevation; // 当前选中的海拔高度
         private int brushSize;
+        private OptionalToggle riverMode;
 
         private void Awake()
         {
@@ -108,6 +109,11 @@ namespace HexMap
         public void ShowUI(bool visible)
         {
             hexGrid.ShowUI(visible);
+        }
+
+        public void SetRiverMode(int mode)
+        {
+            riverMode = (OptionalToggle)mode;
         }
     }
 }

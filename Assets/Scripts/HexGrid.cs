@@ -14,7 +14,6 @@ namespace HexMap
         [SerializeField] private Text cellLabelPrefab = default;
         [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
-        [SerializeField] private bool showCellLabel = true;
         [SerializeField] private Texture2D noiseSource = default;
 
         private int cellCountX;
@@ -122,7 +121,6 @@ namespace HexMap
             label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
             label.text = cell.coordinates.ToStringOnSeparateLines();
             cell.uiRect = label.rectTransform;
-            label.enabled = showCellLabel;
 
             cell.Elevation = 0;
 
@@ -152,6 +150,25 @@ namespace HexMap
             HexCoordinates coordinates = HexCoordinates.FromPosition(position);
             int index = coordinates.X + coordinates.Z * cellCountX + coordinates.Z / 2;
             return cells[index];
+        }
+
+        public HexCell GetCell(HexCoordinates coordinates)
+        {
+            int z = coordinates.Z;
+            if (z < 0 || z >= cellCountZ) return null;
+
+            int x = coordinates.X + z / 2;
+            if (x < 0 || x >= cellCountX) return null;
+
+            return cells[x + z * cellCountX];
+        }
+
+        public void ShowUI(bool visible)
+        {
+            foreach (var chunk in chunks)
+            {
+                chunk.ShowUI(visible);
+            }
         }
     }
 }

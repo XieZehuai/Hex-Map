@@ -11,12 +11,15 @@ namespace HexMap
         public Color[] colors;
         public HexGrid hexGrid;
 
+        private bool applyColor;
         private Color activeColor; // 当前选中的颜色
+        private bool applyElevation = true;
         private int activeElevation; // 当前选中的海拔高度
+        private int brushSize;
 
         private void Awake()
         {
-            SelectColor(0);
+            SelectColor(-1);
         }
 
         private void Update()
@@ -33,14 +36,43 @@ namespace HexMap
             Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(inputRay, out RaycastHit hit))
             {
-                EditCell(hexGrid.GetCell(hit.point));
+                EdgeCells(hexGrid.GetCell(hit.point));
+            }
+        }
+
+        private void EdgeCells(HexCell center)
+        {
+            int centerX = center.coordinates.X;
+            int centerZ = center.coordinates.Z;
+
+            for (int r = 0, z = centerZ - brushSize; z <= centerZ; z++, r++)
+            {
+                for (int x = centerX - r; x <= centerX + brushSize; x++)
+                {
+                    EditCell(hexGrid.GetCell(new HexCoordinates(x, z)));
+                }
+            }
+            for (int r = 0, z = centerZ + brushSize; z > centerZ; z--, r++)
+            {
+                for (int x = centerX - brushSize; x <= centerX + r; x++)
+                {
+                    EditCell(hexGrid.GetCell(new HexCoordinates(x, z)));
+                }
             }
         }
 
         private void EditCell(HexCell cell)
         {
-            cell.Color = activeColor;
-            cell.Elevation = activeElevation;
+            if (cell == null) return;
+
+            if (applyColor)
+            {
+                cell.Color = activeColor;
+            }
+            if (applyElevation)
+            {
+                cell.Elevation = activeElevation;
+            }
         }
 
         /// <summary>
@@ -48,7 +80,16 @@ namespace HexMap
         /// </summary>
         public void SelectColor(int index)
         {
-            activeColor = colors[index];
+            applyColor = index >= 0;
+            if (applyColor)
+            {
+                activeColor = colors[index];
+            }
+        }
+
+        public void SetApplyElevation(bool toggle)
+        {
+            applyElevation = toggle;
         }
 
         /// <summary>
@@ -57,6 +98,16 @@ namespace HexMap
         public void SetElevation(float elevation)
         {
             activeElevation = (int)elevation;
+        }
+
+        public void SetBrushSize(float size)
+        {
+            brushSize = (int)size;
+        }
+
+        public void ShowUI(bool visible)
+        {
+            hexGrid.ShowUI(visible);
         }
     }
 }

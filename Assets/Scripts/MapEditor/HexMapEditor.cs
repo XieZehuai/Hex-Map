@@ -18,6 +18,11 @@ namespace HexMap.Editor
         private int brushSize;
         private OptionalToggle riverMode;
 
+        // 用于检测鼠标拖动输入
+        private bool isDrag;
+        private HexDirection dragDirection;
+        private HexCell previousCell;
+
         private void Awake()
         {
             SelectColor(-1);
@@ -26,22 +31,57 @@ namespace HexMap.Editor
         private void Update()
         {
             // 当点击鼠标左键并且鼠标不处于UI上时处理点击操作
-            if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+            if (Input.GetMouseButton(0) && !EventSystem.current.IsPointerOverGameObject())
             {
                 HandleInput();
+            }
+            else
+            {
+                previousCell = null;
             }
         }
 
         private void HandleInput()
         {
             Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+
             if (Physics.Raycast(inputRay, out RaycastHit hit))
             {
-                EdgeCells(hexGrid.GetCell(hit.point));
+                HexCell currentCell = hexGrid.GetCell(hit.point);
+
+                if (previousCell != null && previousCell != currentCell)
+                {
+                    ValidateDrag(currentCell);
+                }
+                else
+                {
+                    isDrag = false;
+                }
+
+                EditCells(currentCell);
+                previousCell = currentCell;
+            }
+            else
+            {
+                previousCell = null;
             }
         }
 
-        private void EdgeCells(HexCell center)
+        private void ValidateDrag(HexCell currentCell)
+        {
+            for (dragDirection = HexDirection.NE; dragDirection <= HexDirection.NW; dragDirection++)
+            {
+                if (previousCell.GetNeighbor(dragDirection) == currentCell)
+                {
+                    isDrag = true;
+                    return;
+                }
+            }
+
+            isDrag = false;
+        }
+
+        private void EditCells(HexCell center)
         {
             int centerX = center.coordinates.X;
             int centerZ = center.coordinates.Z;
@@ -70,9 +110,23 @@ namespace HexMap.Editor
             {
                 cell.Color = activeColor;
             }
+
             if (applyElevation)
             {
                 cell.Elevation = activeElevation;
+            }
+
+            if (riverMode == OptionalToggle.No)
+            {
+                cell.RemoveRiver();
+            }
+            else if (isDrag && riverMode == OptionalToggle.Yes)
+            {
+                HexCell otherCell = cell.GetNeighbor(dragDirection.Opposite());
+                if (otherCell != null)
+                {
+                    otherCell.SetOutgoingRiver(dragDirection);
+                }
             }
         }
 

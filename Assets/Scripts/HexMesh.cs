@@ -76,7 +76,25 @@ namespace HexMap
             EdgeVertices e = new EdgeVertices(center + HexMetrics.GetFirstSolidCorner(direction),
                 center + HexMetrics.GetSecondSolidCorner(direction));
 
-            TriangulateEdgeFan(center, e, cell.Color);
+            if (cell.HasRiver)
+            {
+                if (cell.HasRiverThroughEdge(direction))
+                {
+                    e.v3.y = cell.StreamBedY;
+                    if (cell.HasRiverBeginOrEnd)
+                    {
+                        TriangulateWithRiverBeginOrEnd(direction, cell, center, e);
+                    }
+                    else
+                    {
+                        TriangulateWithRiver(direction, cell, center, e);
+                    }
+                }
+            }
+            else
+            {
+                TriangulateEdgeFan(center, e, cell.Color);
+            }
 
             // 生成当前单元格与相邻单元格之间的过渡部分
             if (direction <= HexDirection.SE)
@@ -85,6 +103,12 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 生成单元格上的三角形
+        /// <para>
+        /// 将单元格看成由六个三角形组成，这一步是生成其中的一个三角形
+        /// </para>
+        /// </summary>
         private void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, Color color)
         {
             AddTriangle(center, edge.v1, edge.v2);
@@ -93,6 +117,71 @@ namespace HexMap
             AddTriangleColor(color);
             AddTriangle(center, edge.v3, edge.v4);
             AddTriangleColor(color);
+            AddTriangle(center, edge.v4, edge.v5);
+            AddTriangleColor(color);
+        }
+
+        private void TriangulateWithRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
+        {
+            Vector3 centerL, centerR;
+            // 如果在当前方向的反方向上也有河流，说明是直流
+            if (cell.HasRiverThroughEdge(direction.Opposite()))
+            {
+                centerL = center + HexMetrics.GetFirstSolidCorner(direction.Previous()) * 0.25f;
+                centerR = center + HexMetrics.GetSecondSolidCorner(direction.Next()) * 0.25f;
+            }
+            else if (cell.HasRiverThroughEdge(direction.Next()))
+            {
+                centerL = center;
+                centerR = Vector3.Lerp(center, e.v5, 2f / 3f);
+            }
+            else if (cell.HasRiverThroughEdge(direction.Previous()))
+            {
+                centerL = Vector3.Lerp(center, e.v1, 2f / 3f);
+                centerR = center;
+            }
+            else if (cell.HasRiverThroughEdge(direction.Next2()))
+            {
+                centerL = center;
+                centerR = center + HexMetrics.GetSolidEdgeMiddle(direction.Next()) * (0.5f * HexMetrics.innerToOuter);
+            }
+            else if (cell.HasRiverThroughEdge(direction.Previous2()))
+            {
+                centerL = center + HexMetrics.GetSolidEdgeMiddle(direction.Previous()) * (0.5f * HexMetrics.innerToOuter);
+                centerR = center;
+            }
+            // 否则说明河流在中心点转弯
+            else
+            {
+                centerL = centerR = center;
+            }
+
+            center = Vector3.Lerp(centerL, centerR, 0.5f);
+
+            EdgeVertices m = new EdgeVertices(Vector3.Lerp(centerL, e.v1, 0.5f),
+                                              Vector3.Lerp(centerR, e.v5, 0.5f), 1f / 6f);
+            m.v3.y = center.y = e.v3.y;
+
+            TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
+
+            AddTriangle(centerL, m.v1, m.v2);
+            AddTriangleColor(cell.Color);
+            AddQuad(centerL, center, m.v2, m.v3);
+            AddQuadColor(cell.Color);
+            AddQuad(center, centerR, m.v3, m.v4);
+            AddQuadColor(cell.Color);
+            AddTriangle(centerR, m.v4, m.v5);
+            AddTriangleColor(cell.Color);
+        }
+
+        private void TriangulateWithRiverBeginOrEnd(HexDirection direction, HexCell cell,
+            Vector3 center, EdgeVertices e)
+        {
+            EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, e.v1, 0.5f), Vector3.Lerp(center, e.v5, 0.5f));
+            m.v3.y = e.v3.y;
+
+            TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
+            TriangulateEdgeFan(center, m, cell.Color);
         }
 
         /// <summary>
@@ -108,8 +197,14 @@ namespace HexMap
             // 生成单元格和其对应方向上的相邻单元格中间的矩形连接部分
             Vector3 bridge = HexMetrics.GetBridge(direction);
             bridge.y = neighbor.Position.y - cell.Position.y;
-            EdgeVertices e2 = new EdgeVertices(e1.v1 + bridge, e1.v4 + bridge);
+            EdgeVertices e2 = new EdgeVertices(e1.v1 + bridge, e1.v5 + bridge);
 
+            if (neighbor.HasRiverThroughEdge(direction.Opposite()))
+            {
+                e2.v3.y = neighbor.StreamBedY;
+            }
+
+            // 判断单元格与相邻单元格之间的连接类型
             if (cell.GetEdgeType(direction) == HexEdgeType.Slope)
             {
                 TriangulateEdgeTerraces(e1, cell, e2, neighbor);
@@ -126,27 +221,27 @@ namespace HexMap
                 HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
                 if (nextNeighbor != null)
                 {
-                    Vector3 v5 = e1.v4 + HexMetrics.GetBridge(direction.Next());
+                    Vector3 v5 = e1.v5 + HexMetrics.GetBridge(direction.Next());
                     v5.y = nextNeighbor.Position.y;
 
                     if (cell.Elevation <= neighbor.Elevation)
                     {
                         if (cell.Elevation <= nextNeighbor.Elevation)
                         {
-                            TriangulateCorner(e1.v4, cell, e2.v4, neighbor, v5, nextNeighbor);
+                            TriangulateCorner(e1.v5, cell, e2.v5, neighbor, v5, nextNeighbor);
                         }
                         else
                         {
-                            TriangulateCorner(v5, nextNeighbor, e1.v4, cell, e2.v4, neighbor);
+                            TriangulateCorner(v5, nextNeighbor, e1.v5, cell, e2.v5, neighbor);
                         }
                     }
                     else if (neighbor.Elevation <= nextNeighbor.Elevation)
                     {
-                        TriangulateCorner(e2.v4, neighbor, v5, nextNeighbor, e1.v4, cell);
+                        TriangulateCorner(e2.v5, neighbor, v5, nextNeighbor, e1.v5, cell);
                     }
                     else
                     {
-                        TriangulateCorner(v5, nextNeighbor, e1.v4, cell, e2.v4, neighbor);
+                        TriangulateCorner(v5, nextNeighbor, e1.v5, cell, e2.v5, neighbor);
                     }
                 }
             }
@@ -159,6 +254,8 @@ namespace HexMap
             AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
             AddQuadColor(c1, c2);
             AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
+            AddQuadColor(c1, c2);
+            AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
             AddQuadColor(c1, c2);
         }
 
@@ -412,6 +509,14 @@ namespace HexMap
             colors.Add(c2);
             colors.Add(c3);
             colors.Add(c4);
+        }
+
+        private void AddQuadColor(Color color)
+        {
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
         }
 
         /// <summary>

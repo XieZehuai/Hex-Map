@@ -87,6 +87,11 @@ namespace HexMap
         public bool HasRiverBeginOrEnd => hasIncomingRiver != hasOutgoingRiver;
 
         /// <summary>
+        /// 河床高度，忽视海拔扰动的影响，这样才能让不同单元格之间的河床处于相同高度
+        /// </summary>
+        public float StreamBedY => (elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep;
+
+        /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null
         /// </summary>
         public HexCell GetNeighbor(HexDirection direction)

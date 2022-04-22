@@ -50,11 +50,29 @@
         }
 
         /// <summary>
+        /// 获取当前方向的上上个方向
+        /// </summary>
+        public static HexDirection Previous2(this HexDirection direction)
+        {
+            direction -= 2;
+            return direction >= HexDirection.NE ? direction : (direction + 6);
+        }
+
+        /// <summary>
         /// 当前方向的下一个方向
         /// </summary>
         public static HexDirection Next(this HexDirection direction)
         {
             return direction == HexDirection.NW ? HexDirection.NE : (direction + 1);
+        }
+
+        /// <summary>
+        /// 获取当前方向的下下个方向
+        /// </summary>
+        public static HexDirection Next2(this HexDirection direction)
+        {
+            direction += 2;
+            return direction <= HexDirection.NW ? direction : (direction - 6);
         }
     }
 }

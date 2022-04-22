@@ -91,6 +91,8 @@ namespace HexMap
         /// </summary>
         public float StreamBedY => (elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep;
 
+        public float RiverSurfaceY => (elevation + HexMetrics.riverSurfaceElevationOffset) * HexMetrics.elevationStep;
+
         /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null
         /// </summary>

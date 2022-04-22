@@ -45,16 +45,21 @@ namespace HexMap
         /// <summary>
         /// 河流河床相对于其所在单元格的海拔高度
         /// </summary>
-        public const float streamBedElevationOffset = -1f;
+        public const float streamBedElevationOffset = -1.75f;
+
+        /// <summary>
+        /// 河流表面相对于其所在单元格的海拔高度
+        /// </summary>
+        public const float riverSurfaceElevationOffset = -0.5f;
 
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度
         /// </summary>
-        public const float cellPerturbStrength = 0f;
+        public const float cellPerturbStrength = 4f;
         /// <summary>
-        /// 单元格海拔扰动强度，让相同海拔的单元格的实际高度出现起伏
+        /// 单元格海拔扰动强度，单元格的 y 坐标会在 [-elevationPerturbStrength, elevationPerturbStrength] 之间浮动
         /// </summary>
-        public const float elevationPerturbStrength = 1.5f;
+        public const float elevationPerturbStrength = 1f;
 
         /// <summary>
         /// 单元格之间梯田类型连接的台阶数量
@@ -155,6 +160,17 @@ namespace HexMap
         {
             int delta = Mathf.Abs(elevation1 - elevation2);
             return delta == 0 ? HexEdgeType.Flat : delta == 1 ? HexEdgeType.Slope : HexEdgeType.Cliff;
+        }
+
+        /// <summary>
+        /// 使用噪声扰动顶点的位置，形成不规则的六边形
+        /// </summary>
+        public static Vector3 Perturb(Vector3 position)
+        {
+            Vector4 sample = (SampleNoise(position) * 2f - Vector4.one) * cellPerturbStrength;
+            position.x += sample.x;
+            position.z += sample.z;
+            return position;
         }
 
         /// <summary>

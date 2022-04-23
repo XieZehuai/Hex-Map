@@ -47,6 +47,9 @@ namespace HexMap
 
                 elevation = value;
 
+                /*
+                 * 根据海拔扰动强度，修改单元格和 UI 的实际高度
+                 */
                 Vector3 position = transform.localPosition;
                 position.y = elevation * HexMetrics.elevationStep;
                 position.y += (HexMetrics.SampleNoise(position).y * 2f - 1f) * HexMetrics.elevationPerturbStrength;
@@ -56,6 +59,9 @@ namespace HexMap
                 uiPosition.z = -position.y;
                 uiRect.localPosition = uiPosition;
 
+                /*
+                 * 因为河流无法向高处流，所以修改海拔后要判断河流是否合法
+                 */
                 if (hasOutgoingRiver && elevation < GetNeighbor(outgoingRiver).elevation)
                 {
                     RemoveOutgoingRiver();
@@ -91,6 +97,9 @@ namespace HexMap
         /// </summary>
         public float StreamBedY => (elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep;
 
+        /// <summary>
+        /// 河流水面高度，忽视海拔扰动的影响
+        /// </summary>
         public float RiverSurfaceY => (elevation + HexMetrics.riverSurfaceElevationOffset) * HexMetrics.elevationStep;
 
         /// <summary>
@@ -112,6 +121,9 @@ namespace HexMap
             cell.neighbors[(int)direction.Opposite()] = this;
         }
 
+        /// <summary>
+        /// 获取目标方向的连接类型
+        /// </summary>
         public HexEdgeType GetEdgeType(HexDirection direction)
         {
             return HexMetrics.GetEdgeType(elevation, GetNeighbor(direction).elevation);
@@ -135,6 +147,9 @@ namespace HexMap
                    hasOutgoingRiver && outgoingRiver == direction;
         }
 
+        /// <summary>
+        /// 在目标方向上添加一条流出的河流，会检测河流的合法性，只有合法才会设置河流
+        /// </summary>
         public void SetOutgoingRiver(HexDirection direction)
         {
             if (hasOutgoingRiver && outgoingRiver == direction)
@@ -149,6 +164,8 @@ namespace HexMap
                 return;
             }
 
+            // 因为只能有一个流出的河流，所以需要把原有的流出河流移除
+            // 如果当前方向上有流入的河流，也需要移除
             RemoveOutgoingRiver();
             if (hasIncomingRiver && incomingRiver == direction)
             {
@@ -159,6 +176,7 @@ namespace HexMap
             outgoingRiver = direction;
             RefreshSelfOnly();
 
+            // 对应方向上的相邻单元格也需要添加一条流入的河流
             neighbor.RemoveIncomingRiver();
             neighbor.hasIncomingRiver = true;
             neighbor.incomingRiver = direction.Opposite();
@@ -212,6 +230,9 @@ namespace HexMap
             RemoveIncomingRiver();
         }
 
+        /// <summary>
+        /// 刷新单元格所在区块以及与当前单元格相邻的区块（不是与区块相邻，而是与单元格相邻）
+        /// </summary>
         private void Refresh()
         {
             if (chunk != null)
@@ -228,6 +249,9 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 只刷新单元格所在的区块
+        /// </summary>
         private void RefreshSelfOnly()
         {
             chunk.Refresh();

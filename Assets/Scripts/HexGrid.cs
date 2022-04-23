@@ -40,6 +40,9 @@ namespace HexMap
             HexMetrics.noiseSource = noiseSource;
         }
 
+        /// <summary>
+        /// 生成所有的区块
+        /// </summary>
         private void CreateChunks()
         {
             chunks = new HexGridChunk[chunkCountX * chunkCountZ];

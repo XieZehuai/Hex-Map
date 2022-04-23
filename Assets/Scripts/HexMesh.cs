@@ -49,6 +49,9 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 生成网格
+        /// </summary>
         public void Apply()
         {
             hexMesh.SetVertices(vertices);

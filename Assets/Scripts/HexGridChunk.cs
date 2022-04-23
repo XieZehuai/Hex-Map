@@ -15,20 +15,24 @@ namespace HexMap
 
         private HexCell[] cells;
         private Canvas gridCanvas;
+        private bool showRefresh; // 是否需要刷新当前区块
 
         private void Awake()
         {
             gridCanvas = GetComponentInChildren<Canvas>();
 
             cells = new HexCell[HexMetrics.chunkSizeX * HexMetrics.chunkSizeZ];
-
             ShowUI(false);
         }
 
         private void LateUpdate()
         {
-            Triangulate();
-            enabled = false;
+            // 修改操作都是在 Update 中进行的，所以把区块的刷新放在 LateUpdate 里，这样就能统一刷新
+            if (showRefresh)
+            {
+                Triangulate();
+                showRefresh = false;
+            }
         }
 
         public void AddCell(int index, HexCell cell)
@@ -44,9 +48,12 @@ namespace HexMap
             gridCanvas.gameObject.SetActive(visible);
         }
 
+        /// <summary>
+        /// 刷新当前区块，只设置刷新状态，实际刷新操作延迟执行
+        /// </summary>
         public void Refresh()
         {
-            enabled = true;
+            showRefresh = true;
         }
 
         /// <summary>

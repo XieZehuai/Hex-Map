@@ -4,7 +4,7 @@ namespace HexMap
 {
     /// <summary>
     /// 表示六边形一条边上的顶点。
-	/// <para>六边形的每条边都被平均分成三段，总共四个顶点，顶点顺序按顺时针排列。</para>
+	/// <para>六边形的每条边都被平均分成四段，总共五个顶点，顶点顺序按顺时针排列。</para>
     /// </summary>
     public struct EdgeVertices
     {

@@ -110,6 +110,8 @@ namespace HexMap
         /// </summary>
         public bool HasRiverBeginOrEnd => hasIncomingRiver != hasOutgoingRiver;
 
+        public HexDirection RiverBeginOrEndDirection => hasIncomingRiver ? incomingRiver : outgoingRiver;
+
         /// <summary>
         /// 河床高度，忽视海拔扰动的影响，这样才能让不同单元格之间的河床处于相同高度
         /// </summary>

@@ -173,5 +173,13 @@ namespace HexMap
                 chunk.ShowUI(visible);
             }
         }
+
+        public void RefreshAllChunks()
+        {
+            foreach (var chunk in chunks)
+            {
+                chunk.Refresh();
+            }
+        }
     }
 }

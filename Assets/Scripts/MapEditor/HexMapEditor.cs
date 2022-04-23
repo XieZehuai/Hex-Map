@@ -185,5 +185,10 @@ namespace HexMap.Editor
         {
             roadMode = (OptionalToggle)mode;
         }
+
+        public void RefreshEntireGrid()
+        {
+            hexGrid.RefreshAllChunks();
+        }
     }
 }

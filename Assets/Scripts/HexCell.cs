@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace HexMap
 {
@@ -7,7 +8,17 @@ namespace HexMap
     /// </summary>
     public class HexCell : MonoBehaviour
     {
+        public HexCoordinates coordinates;
+        public HexGridChunk chunk;
+        public RectTransform uiRect;
+
         [SerializeField] private HexCell[] neighbors = default;
+
+        /// <summary>
+        /// 单元格上的道路，与河流不同，一个单元格上的六个方向都可以有道路，所以用一个数组
+        /// 来保存每个方向上道路的情况
+        /// </summary>
+        [SerializeField] private bool[] roads = new bool[6];
 
         private int elevation = int.MinValue;
         private Color color;
@@ -21,10 +32,6 @@ namespace HexMap
         private bool hasOutgoingRiver; // 是否有河流流出
         private HexDirection incomingRiver; // 河流流入的方向
         private HexDirection outgoingRiver; // 河流流出的方向
-
-        public HexCoordinates coordinates;
-        public HexGridChunk chunk;
-        public RectTransform uiRect;
 
         public Color Color
         {
@@ -71,6 +78,17 @@ namespace HexMap
                     RemoveIncomingRiver();
                 }
 
+                /*
+                 * 道路无法太陡峭，所以改变海拔后要检查道路的合法性
+                 */
+                for (int i = 0; i < roads.Length; i++)
+                {
+                    if (roads[i] && GetElevationDifference((HexDirection)i) > 1)
+                    {
+                        SetRoad(i, false);
+                    }
+                }
+
                 Refresh();
             }
         }
@@ -101,6 +119,11 @@ namespace HexMap
         /// 河流水面高度，忽视海拔扰动的影响
         /// </summary>
         public float RiverSurfaceY => (elevation + HexMetrics.riverSurfaceElevationOffset) * HexMetrics.elevationStep;
+
+        /// <summary>
+        /// 当前单元格上是否有道路
+        /// </summary>
+        public bool HasRoads => roads.Any(road => road);
 
         /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null
@@ -139,6 +162,16 @@ namespace HexMap
         }
 
         /// <summary>
+        /// 获取当前单元格和其目标方向上相邻单元格之间的海拔差
+        /// </summary>
+        public int GetElevationDifference(HexDirection direction)
+        {
+            return Mathf.Abs(elevation - GetNeighbor(direction).elevation);
+        }
+
+        #region 河流相关函数
+
+        /// <summary>
         /// 单元格在目标方向上是否有河流流过
         /// </summary>
         public bool HasRiverThroughEdge(HexDirection direction)
@@ -148,7 +181,7 @@ namespace HexMap
         }
 
         /// <summary>
-        /// 在目标方向上添加一条流出的河流，会检测河流的合法性，只有合法才会设置河流
+        /// 在目标方向上添加一条流出的河流，会检测河流的合法性，只有合法才会设置河流（会覆盖该方向上的道路）
         /// </summary>
         public void SetOutgoingRiver(HexDirection direction)
         {
@@ -174,13 +207,14 @@ namespace HexMap
 
             hasOutgoingRiver = true;
             outgoingRiver = direction;
-            RefreshSelfOnly();
 
             // 对应方向上的相邻单元格也需要添加一条流入的河流
             neighbor.RemoveIncomingRiver();
             neighbor.hasIncomingRiver = true;
             neighbor.incomingRiver = direction.Opposite();
-            neighbor.RefreshSelfOnly();
+
+            // 道路无法覆盖河流，但河流可以覆盖道路，所以设置河流后把当前方向上的道路移除
+            SetRoad((int)direction, false);
         }
 
         /// <summary>
@@ -229,6 +263,60 @@ namespace HexMap
             RemoveOutgoingRiver();
             RemoveIncomingRiver();
         }
+
+        #endregion
+
+        #region 道路相关函数
+
+        /// <summary>
+        /// 目标方向上是否有道路
+        /// </summary>
+        public bool HasRoadThroughEdge(HexDirection direction)
+        {
+            return roads[(int)direction];
+        }
+
+        /// <summary>
+        /// 在目标方向上添加一条道路（无法覆盖该方向上的河流）
+        /// </summary>
+        public void AddRoad(HexDirection direction)
+        {
+            // 在同一个方向上，无法同时存在道路以及河流，所以要判断当前方向上是否有河流；
+            // 如果与目标方向上的单元格之间海拔差太大，也不能设置道路
+            if (!roads[(int)direction] && !HasRiverThroughEdge(direction) &&
+                GetElevationDifference(direction) <= 1)
+            {
+                SetRoad((int)direction, true);
+            }
+        }
+
+        /// <summary>
+        /// 移除单元格上所有的道路以及对应相邻单元格上的道路
+        /// </summary>
+        public void RemoveRoads()
+        {
+            for (int i = 0; i < roads.Length; i++)
+            {
+                if (roads[i])
+                {
+                    SetRoad(i, false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 设置目标方向上的道路及其对应邻居的道路
+        /// </summary>
+        private void SetRoad(int index, bool state)
+        {
+            roads[index] = state;
+            neighbors[index].roads[(int)((HexDirection)index).Opposite()] = state;
+
+            neighbors[index].RefreshSelfOnly();
+            RefreshSelfOnly();
+        }
+
+        #endregion
 
         /// <summary>
         /// 刷新单元格所在区块以及与当前单元格相邻的区块（不是与区块相邻，而是与单元格相邻）

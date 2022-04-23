@@ -15,8 +15,9 @@ namespace HexMap.Editor
         private Color activeColor; // 当前选中的颜色
         private bool applyElevation = true;
         private int activeElevation; // 当前选中的海拔高度
-        private int brushSize;
-        private OptionalToggle riverMode;
+        private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
+        private OptionalToggle riverMode; // 河流的编辑模式
+        private OptionalToggle roadMode; // 道路的编辑模式
 
         // 用于检测鼠标拖动输入
         private bool isDrag;
@@ -110,22 +111,32 @@ namespace HexMap.Editor
             {
                 cell.Color = activeColor;
             }
-
             if (applyElevation)
             {
                 cell.Elevation = activeElevation;
             }
-
             if (riverMode == OptionalToggle.No)
             {
                 cell.RemoveRiver();
             }
-            else if (isDrag && riverMode == OptionalToggle.Yes)
+            if (roadMode == OptionalToggle.No)
+            {
+                cell.RemoveRoads();
+            }
+
+            if (isDrag)
             {
                 HexCell otherCell = cell.GetNeighbor(dragDirection.Opposite());
                 if (otherCell != null)
                 {
-                    otherCell.SetOutgoingRiver(dragDirection);
+                    if (riverMode == OptionalToggle.Yes)
+                    {
+                        otherCell.SetOutgoingRiver(dragDirection);
+                    }
+                    if (roadMode == OptionalToggle.Yes)
+                    {
+                        otherCell.AddRoad(dragDirection);
+                    }
                 }
             }
         }
@@ -168,6 +179,11 @@ namespace HexMap.Editor
         public void SetRiverMode(int mode)
         {
             riverMode = (OptionalToggle)mode;
+        }
+
+        public void SetRoadMode(int mode)
+        {
+            roadMode = (OptionalToggle)mode;
         }
     }
 }

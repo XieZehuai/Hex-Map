@@ -55,7 +55,7 @@ namespace HexMap
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度
         /// </summary>
-        public const float cellPerturbStrength = 4f;
+        public const float cellPerturbStrength = 4f; // 4f
         /// <summary>
         /// 单元格海拔扰动强度，单元格的 y 坐标会在 [-elevationPerturbStrength, elevationPerturbStrength] 之间浮动
         /// </summary>

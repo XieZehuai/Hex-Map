@@ -9,8 +9,14 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags 
+        { 
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry+1" 
+        }
+
         LOD 200
+        Offset -1, -1
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
@@ -34,7 +40,7 @@
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
         // #pragma instancing_options assumeuniformscaling
         UNITY_INSTANCING_BUFFER_START(Props)
-            // put more per-instance properties here
+        // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
         void surf (Input IN, inout SurfaceOutputStandard o)

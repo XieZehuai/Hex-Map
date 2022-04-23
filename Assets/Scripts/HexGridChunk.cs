@@ -124,7 +124,7 @@ namespace HexMap
             }
             else
             {
-                TriangulateEdgeFan(center, e, cell.Color);
+                TriangulateWithoutRiver(direction, cell, center, e);
             }
 
             // 生成当前单元格与相邻单元格之间的过渡部分
@@ -135,23 +135,8 @@ namespace HexMap
         }
 
         /// <summary>
-        /// 生成单元格上的三角形
-        /// <para>
-        /// 将单元格看成由六个三角形组成，这一步是生成其中的一个三角形
-        /// </para>
+        /// 生成带有河流且河流不是源头或末尾的单元格三角形部分
         /// </summary>
-        private void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, Color color)
-        {
-            terrain.AddTriangle(center, edge.v1, edge.v2);
-            terrain.AddTriangleColor(color);
-            terrain.AddTriangle(center, edge.v2, edge.v3);
-            terrain.AddTriangleColor(color);
-            terrain.AddTriangle(center, edge.v3, edge.v4);
-            terrain.AddTriangleColor(color);
-            terrain.AddTriangle(center, edge.v4, edge.v5);
-            terrain.AddTriangleColor(color);
-        }
-
         private void TriangulateWithRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
         {
             Vector3 centerL, centerR;
@@ -209,6 +194,9 @@ namespace HexMap
             TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
         }
 
+        /// <summary>
+        /// 生成带有河流且河流是源头或末尾的单元格三角形部分
+        /// </summary>
         private void TriangulateWithRiverBeginOrEnd(HexDirection direction, HexCell cell,
             Vector3 center, EdgeVertices e)
         {
@@ -233,6 +221,9 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 生成与河流相邻的单元格三角形部分
+        /// </summary>
         private void TriangulateAdjacentToRiver(HexDirection direction, HexCell cell,
             Vector3 center, EdgeVertices e)
         {
@@ -256,6 +247,40 @@ namespace HexMap
 
             TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
             TriangulateEdgeFan(center, m, cell.Color);
+        }
+
+        /// <summary>
+        /// 生成不带有河流的单元格三角形部分（这里的不带有河流是指整个单元格都没有河流）
+        /// </summary>
+        private void TriangulateWithoutRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
+        {
+            TriangulateEdgeFan(center, e, cell.Color);
+
+            if (cell.HasRoads)
+            {
+                Vector2 interpolators = GetRoadInterpolators(direction, cell);
+
+                TriangulateRoad(center, Vector3.Lerp(center, e.v1, interpolators.x),
+                    Vector3.Lerp(center, e.v5, interpolators.y), e, cell.HasRoadThroughEdge(direction));
+            }
+        }
+
+        /// <summary>
+        /// 生成单元格上的三角形
+        /// <para>
+        /// 将单元格看成由六个三角形组成，这一步是生成其中的一个三角形
+        /// </para>
+        /// </summary>
+        private void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, Color color)
+        {
+            terrain.AddTriangle(center, edge.v1, edge.v2);
+            terrain.AddTriangleColor(color);
+            terrain.AddTriangle(center, edge.v2, edge.v3);
+            terrain.AddTriangleColor(color);
+            terrain.AddTriangle(center, edge.v3, edge.v4);
+            terrain.AddTriangleColor(color);
+            terrain.AddTriangle(center, edge.v4, edge.v5);
+            terrain.AddTriangleColor(color);
         }
 
         /// <summary>
@@ -366,6 +391,27 @@ namespace HexMap
             TriangulateEdgeStrip(e2, c2, end, endCell.Color, hasRoad);
         }
 
+        private void TriangulateRoad(Vector3 center, Vector3 mL, Vector3 mR, EdgeVertices e, bool hasRoad)
+        {
+            if (hasRoad)
+            {
+                Vector3 mC = Vector3.Lerp(mL, mR, 0.5f);
+                TriangulateRoadSegment(mL, mC, mR, e.v2, e.v3, e.v4);
+
+                road.AddTriangle(center, mL, mC);
+                road.AddTriangle(center, mC, mR);
+                road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f));
+                road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
+            }
+            else
+            {
+                TriangulateRoadEdge(center, mL, mR);
+            }
+        }
+
+        /// <summary>
+        /// 生成道路片段，道路直接覆盖在单元格之上，所以直接生成面片就行
+        /// </summary>
         private void TriangulateRoadSegment(Vector3 v1, Vector3 v2, Vector3 v3,
             Vector3 v4, Vector3 v5, Vector3 v6)
         {
@@ -373,6 +419,29 @@ namespace HexMap
             road.AddQuad(v2, v3, v5, v6);
             road.AddQuadUV(0f, 1f, 0f, 0f);
             road.AddQuadUV(1f, 0f, 0f, 0f);
+        }
+
+        private void TriangulateRoadEdge(Vector3 center, Vector3 mL, Vector3 mR)
+        {
+            road.AddTriangle(center, mL, mR);
+            road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        }
+
+        private Vector2 GetRoadInterpolators(HexDirection direction, HexCell cell)
+        {
+            Vector2 interpolators;
+
+            if (cell.HasRoadThroughEdge(direction))
+            {
+                interpolators.x = interpolators.y = 0.5f;
+            }
+            else
+            {
+                interpolators.x = cell.HasRoadThroughEdge(direction.Previous()) ? 0.5f : 0.25f;
+                interpolators.y = cell.HasRoadThroughEdge(direction.Next()) ? 0.5f : 0.25f;
+            }
+
+            return interpolators;
         }
 
         /// <summary>

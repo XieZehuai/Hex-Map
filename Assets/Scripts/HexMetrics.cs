@@ -37,6 +37,10 @@ namespace HexMap
         /// </summary>
         public const float blendFactor = 1f - solidFactor;
 
+        public const float waterFactor = 0.6f;
+
+        public const float waterBlendFactor = 1f - waterFactor;
+
         /// <summary>
         /// 每单位海拔的高度
         /// </summary>
@@ -127,6 +131,21 @@ namespace HexMap
         public static Vector3 GetSecondSolidCorner(HexDirection direction)
         {
             return corners[(int)direction + 1] * solidFactor;
+        }
+
+        public static Vector3 GetFirstWaterCorner(HexDirection direction)
+        {
+            return corners[(int)direction] * waterFactor;
+        }
+
+        public static Vector3 GetSecondWaterCorner(HexDirection direction)
+        {
+            return corners[(int)direction + 1] * waterFactor;
+        }
+
+        public static Vector3 GetWaterBridge(HexDirection direction)
+        {
+            return (corners[(int)direction] + corners[(int)direction + 1]) * waterBlendFactor;
         }
 
         public static Vector3 GetSolidEdgeMiddle(HexDirection direction)

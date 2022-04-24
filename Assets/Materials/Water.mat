@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: River
-  m_Shader: {fileID: 4800000, guid: 96cb73a71860721409ad02d8811bb438, type: 3}
+  m_Name: Water
+  m_Shader: {fileID: 4800000, guid: 680c5f157f317ea41961593d30f88b4e, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -28,4 +28,4 @@ Material:
     - _Glossiness: 0.6
     - _Metallic: 0
     m_Colors:
-    - _Color: {r: 0, g: 0.11111114, b: 1, a: 0.20784314}
+    - _Color: {r: 0, g: 0.11111114, b: 1, a: 0.22352941}

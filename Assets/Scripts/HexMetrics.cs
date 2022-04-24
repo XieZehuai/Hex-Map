@@ -48,9 +48,10 @@ namespace HexMap
         public const float streamBedElevationOffset = -1.75f;
 
         /// <summary>
-        /// 河流表面相对于其所在单元格的海拔高度
+        /// 水平面相对于同等级海拔的高度差，当水平面与包围它的单元格海拔相同时，
+        /// 水平面必须低于单元格表面的高度，所以给所有水平面加上个高度偏移
         /// </summary>
-        public const float riverSurfaceElevationOffset = -0.5f;
+        public const float waterElevationOffset = -0.4f;
 
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度

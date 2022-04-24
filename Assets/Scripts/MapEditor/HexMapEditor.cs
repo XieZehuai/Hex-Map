@@ -12,9 +12,11 @@ namespace HexMap.Editor
         public HexGrid hexGrid;
 
         private bool applyColor;
-        private Color activeColor; // 当前选中的颜色
         private bool applyElevation = true;
+        private bool applyWaterLevel = true;
+        private Color activeColor; // 当前选中的颜色
         private int activeElevation; // 当前选中的海拔高度
+        private int activeWaterLevel;
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
         private OptionalToggle riverMode; // 河流的编辑模式
         private OptionalToggle roadMode; // 道路的编辑模式
@@ -115,6 +117,10 @@ namespace HexMap.Editor
             {
                 cell.Elevation = activeElevation;
             }
+            if (applyWaterLevel)
+            {
+                cell.WaterLevel = activeWaterLevel;
+            }
             if (riverMode == OptionalToggle.No)
             {
                 cell.RemoveRiver();
@@ -164,6 +170,16 @@ namespace HexMap.Editor
         public void SetElevation(float elevation)
         {
             activeElevation = (int)elevation;
+        }
+
+        public void SetApplyWaterLevel(bool toggle)
+        {
+            applyWaterLevel = toggle;
+        }
+
+        public void SetWaterLevel(float level)
+        {
+            activeWaterLevel = (int)level;
         }
 
         public void SetBrushSize(float size)

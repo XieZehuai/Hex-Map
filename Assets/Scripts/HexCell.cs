@@ -22,6 +22,7 @@ namespace HexMap
 
         private int elevation = int.MinValue;
         private Color color;
+        private int waterLevel;
 
         /*
          * 对于一个单元格来说，它的河流可以分为没有河流以及有河流穿过，对于穿过的河流，可以
@@ -95,21 +96,16 @@ namespace HexMap
 
         public Vector3 Position => transform.localPosition;
 
+        public bool HasRoads => roads.Any(road => road);
+
+        #region 河流相关属性
         public bool HasIncomingRiver => hasIncomingRiver;
         public bool HasOutgoingRiver => hasOutgoingRiver;
-        public HexDirection IncomingRiver => incomingRiver;
-        public HexDirection OutgoingRiver => outgoingRiver;
-
-        /// <summary>
-        /// 当前单元格是否有河流
-        /// </summary>
         public bool HasRiver => hasIncomingRiver || hasOutgoingRiver;
-
-        /// <summary>
-        /// 当前单元格是否是河流源头或末尾
-        /// </summary>
         public bool HasRiverBeginOrEnd => hasIncomingRiver != hasOutgoingRiver;
 
+        public HexDirection IncomingRiver => incomingRiver;
+        public HexDirection OutgoingRiver => outgoingRiver;
         public HexDirection RiverBeginOrEndDirection => hasIncomingRiver ? incomingRiver : outgoingRiver;
 
         /// <summary>
@@ -120,13 +116,39 @@ namespace HexMap
         /// <summary>
         /// 河流水面高度，忽视海拔扰动的影响
         /// </summary>
-        public float RiverSurfaceY => (elevation + HexMetrics.riverSurfaceElevationOffset) * HexMetrics.elevationStep;
+        public float RiverSurfaceY => (elevation + HexMetrics.waterElevationOffset) * HexMetrics.elevationStep;
+        #endregion
+
+        #region 水域相关属性
+        /// <summary>
+        /// 单元格所处水域的水平面高度（单位海拔）
+        /// <para>
+        /// 与河流水面高度不同，河流处于单元格内部，是单元格内部的一部分，而水域则覆盖在
+        /// 整个单元格之上；区分水域是为了让不同区域的水平面可以不同；当水平面高度大于海
+        /// 拔时，单元格被水覆盖
+        /// </para>
+        /// </summary>
+        public int WaterLevel
+        {
+            get => waterLevel;
+            set
+            {
+                if (waterLevel == value) return;
+
+                waterLevel = value;
+                Refresh();
+            }
+        }
 
         /// <summary>
-        /// 当前单元格上是否有道路
+        /// 单元格是否处于水平面下
         /// </summary>
-        public bool HasRoads => roads.Any(road => road);
+        public bool IsUnderWater => waterLevel > elevation;
 
+        public float WaterSurfaceY => (waterLevel + HexMetrics.waterElevationOffset) * HexMetrics.elevationStep;
+        #endregion
+
+        #region 与相邻单元格有关的方法
         /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null
         /// </summary>
@@ -170,9 +192,9 @@ namespace HexMap
         {
             return Mathf.Abs(elevation - GetNeighbor(direction).elevation);
         }
+        #endregion
 
-        #region 河流相关函数
-
+        #region 河流相关方法
         /// <summary>
         /// 单元格在目标方向上是否有河流流过
         /// </summary>
@@ -265,11 +287,9 @@ namespace HexMap
             RemoveOutgoingRiver();
             RemoveIncomingRiver();
         }
-
         #endregion
 
-        #region 道路相关函数
-
+        #region 道路相关方法
         /// <summary>
         /// 目标方向上是否有道路
         /// </summary>
@@ -317,7 +337,6 @@ namespace HexMap
             neighbors[index].RefreshSelfOnly();
             RefreshSelfOnly();
         }
-
         #endregion
 
         /// <summary>

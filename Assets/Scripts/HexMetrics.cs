@@ -55,12 +55,12 @@ namespace HexMap
         /// 水平面相对于同等级海拔的高度差，当水平面与包围它的单元格海拔相同时，
         /// 水平面必须低于单元格表面的高度，所以给所有水平面加上个高度偏移
         /// </summary>
-        public const float waterElevationOffset = -0.4f;
+        public const float waterElevationOffset = -0.5f;
 
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度
         /// </summary>
-        public const float cellPerturbStrength = 4f; // 4f
+        public const float cellPerturbStrength = 0f; // 4f
         /// <summary>
         /// 单元格海拔扰动强度，单元格的 y 坐标会在 [-elevationPerturbStrength, elevationPerturbStrength] 之间浮动
         /// </summary>

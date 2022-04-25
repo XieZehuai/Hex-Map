@@ -1,4 +1,4 @@
-﻿Shader "Hex Map/River"
+﻿Shader "Hex Map/Estuary"
 {
     Properties
     {
@@ -6,12 +6,10 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
-
-        _FlowSpeed ("Flow Speed", Range(0, 2)) = 0.25
     }
     SubShader
     {
-        Tags { "RenderType" = "Transparent" "Queue" = "Transparent+1" }
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
         LOD 200
 
         CGPROGRAM
@@ -28,12 +26,13 @@
         struct Input
         {
             float2 uv_MainTex;
+            float2 uv2_MainTex;
+            float3 worldPos;
         };
 
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
-        float _FlowSpeed;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -44,7 +43,12 @@
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float river = River(IN.uv_MainTex, _MainTex);
+            float shore = IN.uv_MainTex.y;
+            float foam = Foam(shore, IN.worldPos.xz, _MainTex);
+            float waves = Waves(IN.worldPos.xz, _MainTex);
+            waves *= 1 - shore;
+
+            float river = River(IN.uv2_MainTex, _MainTex);
 
             fixed4 c = saturate(_Color + river);
             o.Albedo = c.rgb;

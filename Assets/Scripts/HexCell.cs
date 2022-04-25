@@ -141,7 +141,7 @@ namespace HexMap
         }
 
         /// <summary>
-        /// 单元格是否处于水平面下
+        /// 单元格是否被水覆盖
         /// </summary>
         public bool IsUnderWater => waterLevel > elevation;
 

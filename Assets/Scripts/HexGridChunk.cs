@@ -15,10 +15,11 @@ namespace HexMap
         [SerializeField] private HexMesh road = default;
         [SerializeField] private HexMesh water = default;
         [SerializeField] private HexMesh waterShore = default;
+        [SerializeField] private HexMesh estuaries = default;
 
         private HexCell[] cells;
         private Canvas gridCanvas;
-        private bool showRefresh = true; // 是否需要刷新当前区块
+        private bool shouldRefresh = true; // 是否需要刷新当前区块
 
         private void Awake()
         {
@@ -31,10 +32,10 @@ namespace HexMap
         private void LateUpdate()
         {
             // 修改操作都是在 Update 中进行的，所以把区块的刷新放在 LateUpdate 里，这样就能统一刷新
-            if (showRefresh)
+            if (shouldRefresh)
             {
                 Triangulate();
-                showRefresh = false;
+                shouldRefresh = false;
             }
         }
 
@@ -56,11 +57,11 @@ namespace HexMap
         /// </summary>
         public void Refresh()
         {
-            showRefresh = true;
+            shouldRefresh = true;
         }
 
         /// <summary>
-        /// 根据给定的单元格数据生成网格
+        /// 清除网格数据并重新生成网格
         /// </summary>
         public void Triangulate()
         {
@@ -69,6 +70,7 @@ namespace HexMap
             road.Clear();
             water.Clear();
             waterShore.Clear();
+            estuaries.Clear();
 
             for (int i = 0; i < cells.Length; i++)
             {
@@ -80,6 +82,7 @@ namespace HexMap
             road.Apply();
             water.Apply();
             waterShore.Apply();
+            estuaries.Apply();
         }
 
         /// <summary>
@@ -100,10 +103,6 @@ namespace HexMap
         /// </summary>
         private void Triangulate(HexDirection direction, HexCell cell)
         {
-            // 把三角形看成由固定部分和过渡部分组成，固定部分为 中心 和 两条边上分割点 组成的三角形，
-            // 过渡部分再分成中间的矩形部分和两边的三角形部分，中间的矩形用于和直接邻居过渡，两边的
-            // 三角形用于和直接邻居与间接邻居过渡
-
             // 生成三角形的固定部分
             Vector3 center = cell.Position; // 单元格的中心
             EdgeVertices e = new EdgeVertices(center + HexMetrics.GetFirstSolidCorner(direction),
@@ -146,13 +145,47 @@ namespace HexMap
         }
 
         /// <summary>
+        /// 生成带有河流且河流是源头或末尾的单元格三角形部分
+        /// </summary>
+        private void TriangulateWithRiverBeginOrEnd(HexDirection direction, HexCell cell,
+            Vector3 center, EdgeVertices e)
+        {
+            EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, e.v1, 0.5f), Vector3.Lerp(center, e.v5, 0.5f));
+            m.v3.y = e.v3.y;
+
+            TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
+            TriangulateEdgeFan(center, m, cell.Color);
+
+            // 生成河流
+            if (!cell.IsUnderWater)
+            {
+                bool reversed = cell.HasIncomingRiver;
+                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
+
+                center.y = m.v2.y = m.v4.y = cell.RiverSurfaceY;
+                river.AddTriangle(center, m.v2, m.v4);
+                if (reversed)
+                {
+                    river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
+                }
+                else
+                {
+                    river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
+                }
+            }
+        }
+
+        /// <summary>
         /// 生成带有河流且河流不是源头或末尾的单元格三角形部分
         /// </summary>
         private void TriangulateWithRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
         {
+            /*
+             * 判断河流的流向，相对于当前方向，河流可以有五种流向（剩下的五个方向），因为要保持河流的宽度，所以
+             * 流入和流出河流的连接处需要用四边形面片而不是三角形，所以要把单元格的中心点拆分成两个中心点
+             */
             Vector3 centerL, centerR;
-            // 如果在当前方向的反方向上也有河流，说明是直流
-            if (cell.HasRiverThroughEdge(direction.Opposite()))
+            if (cell.HasRiverThroughEdge(direction.Opposite())) // 如果在当前方向的反方向上也有河流，说明是直流
             {
                 centerL = center + HexMetrics.GetFirstSolidCorner(direction.Previous()) * 0.25f;
                 centerR = center + HexMetrics.GetSecondSolidCorner(direction.Next()) * 0.25f;
@@ -172,25 +205,19 @@ namespace HexMap
                 centerL = center;
                 centerR = center + HexMetrics.GetSolidEdgeMiddle(direction.Next()) * (0.5f * HexMetrics.innerToOuter);
             }
-            else if (cell.HasRiverThroughEdge(direction.Previous2()))
+            else
             {
                 centerL = center + HexMetrics.GetSolidEdgeMiddle(direction.Previous()) * (0.5f * HexMetrics.innerToOuter);
                 centerR = center;
             }
-            // 否则说明河流在中心点转弯
-            else
-            {
-                centerL = centerR = center;
-            }
 
-            center = Vector3.Lerp(centerL, centerR, 0.5f);
-
+            center = Vector3.Lerp(centerL, centerR, 0.5f); // 重新计算单元格的中心点
             EdgeVertices m = new EdgeVertices(Vector3.Lerp(centerL, e.v1, 0.5f),
                                               Vector3.Lerp(centerR, e.v5, 0.5f), 1f / 6f);
             m.v3.y = center.y = e.v3.y;
 
+            // 生成带有河流渠道的单元格三角形
             TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
-
             terrain.AddTriangle(centerL, m.v1, m.v2);
             terrain.AddTriangleColor(cell.Color);
             terrain.AddQuad(centerL, center, m.v2, m.v3);
@@ -200,40 +227,17 @@ namespace HexMap
             terrain.AddTriangle(centerR, m.v4, m.v5);
             terrain.AddTriangleColor(cell.Color);
 
-            bool reversed = cell.IncomingRiver == direction;
-            TriangulateRiverQuad(centerL, centerR, m.v2, m.v4, cell.RiverSurfaceY, 0.4f, reversed);
-            TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
-        }
-
-        /// <summary>
-        /// 生成带有河流且河流是源头或末尾的单元格三角形部分
-        /// </summary>
-        private void TriangulateWithRiverBeginOrEnd(HexDirection direction, HexCell cell,
-            Vector3 center, EdgeVertices e)
-        {
-            EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, e.v1, 0.5f), Vector3.Lerp(center, e.v5, 0.5f));
-            m.v3.y = e.v3.y;
-
-            TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
-            TriangulateEdgeFan(center, m, cell.Color);
-
-            bool reversed = cell.HasIncomingRiver;
-            TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
-
-            center.y = m.v2.y = m.v4.y = cell.RiverSurfaceY;
-            river.AddTriangle(center, m.v2, m.v4);
-            if (reversed)
+            // 只有河流没被水域覆盖时才生成
+            if (!cell.IsUnderWater)
             {
-                river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
-            }
-            else
-            {
-                river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
+                bool reversed = cell.IncomingRiver == direction; // 是否逆流
+                TriangulateRiverQuad(centerL, centerR, m.v2, m.v4, cell.RiverSurfaceY, 0.4f, reversed);
+                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
             }
         }
 
         /// <summary>
-        /// 生成与河流相邻的单元格三角形部分
+        /// 生成单元格中没有河流的三角形部分
         /// </summary>
         private void TriangulateAdjacentToRiver(HexDirection direction, HexCell cell,
             Vector3 center, EdgeVertices e)
@@ -243,6 +247,7 @@ namespace HexMap
                 TriangulateRoadAdjacentRiver(direction, cell, center, e);
             }
 
+            // 虽然没有河流，但河流会影响单元格的中心点，所以需要重新计算中心点
             if (cell.HasRiverThroughEdge(direction.Next()))
             {
                 if (cell.HasRiverThroughEdge(direction.Previous()))
@@ -272,30 +277,36 @@ namespace HexMap
         {
             TriangulateEdgeFan(center, e, cell.Color);
 
+            // 生成道路
             if (cell.HasRoads)
             {
                 Vector2 interpolators = GetRoadInterpolators(direction, cell);
-
                 TriangulateRoad(center, Vector3.Lerp(center, e.v1, interpolators.x),
                     Vector3.Lerp(center, e.v5, interpolators.y), e, cell.HasRoadThroughEdge(direction));
             }
         }
 
+        /// <summary>
+        /// 生成覆盖在整个单元格上的水
+        /// </summary>
         private void TriangulateWater(HexDirection direction, HexCell cell, Vector3 center)
         {
             center.y = cell.WaterSurfaceY;
-
             HexCell neighbor = cell.GetNeighbor(direction);
-            if (neighbor != null && !neighbor.IsUnderWater)
+
+            if (neighbor != null && !neighbor.IsUnderWater) // 如果当前方向上的邻居不被水覆盖，说明当前方向是海岸
             {
                 TriangulateWaterShore(direction, cell, neighbor, center);
             }
-            else
+            else // 不存在邻居或邻居被水覆盖
             {
                 TriangulateOpenWater(direction, cell, neighbor, center);
             }
         }
 
+        /// <summary>
+        /// 生成开放的水域，也就是相邻方向上也是水或相邻方向上没有单元格
+        /// </summary>
         private void TriangulateOpenWater(HexDirection direction, HexCell cell, HexCell neighbor, Vector3 center)
         {
             Vector3 c1 = center + HexMetrics.GetFirstWaterCorner(direction);
@@ -320,11 +331,13 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 生成海岸，也就是相邻方向上有单元格且单元格没被水覆盖
+        /// </summary>
         private void TriangulateWaterShore(HexDirection direction, HexCell cell, HexCell neighbor, Vector3 center)
         {
             EdgeVertices e1 = new EdgeVertices(center + HexMetrics.GetFirstWaterCorner(direction),
                                                center + HexMetrics.GetSecondWaterCorner(direction));
-
             water.AddTriangle(center, e1.v1, e1.v2);
             water.AddTriangle(center, e1.v2, e1.v3);
             water.AddTriangle(center, e1.v3, e1.v4);
@@ -335,22 +348,32 @@ namespace HexMap
             EdgeVertices e2 = new EdgeVertices(center2 + HexMetrics.GetSecondSolidCorner(direction.Opposite()),
                                                center2 + HexMetrics.GetFirstSolidCorner(direction.Opposite()));
 
-            waterShore.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
-            waterShore.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
-            waterShore.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
-            waterShore.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
-            waterShore.AddQuadUV(0f, 0f, 0f, 1f);
-            waterShore.AddQuadUV(0f, 0f, 0f, 1f);
-            waterShore.AddQuadUV(0f, 0f, 0f, 1f);
-            waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+            // 如果当前海岸连接着一条河流，说明有水从河流流入到当前水域
+            if (cell.HasRiverThroughEdge(direction))
+            {
+                TriangulateEstuary(e1, e2);
+            }
+            else
+            {
+                // 生成接近海岸的那部分水域
+                waterShore.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
+                waterShore.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
+                waterShore.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
+                waterShore.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+                waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+                waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+                waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+                waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+            }
 
+            // 生成当前单元格，相邻单元格和下一方向上的相邻单元格中间的三角形水域
             HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
             if (nextNeighbor != null)
             {
                 Vector3 v3 = nextNeighbor.Position + (nextNeighbor.IsUnderWater ?
-                                                      HexMetrics.GetFirstWaterCorner(direction.Previous()) :
-                                                      HexMetrics.GetFirstSolidCorner(direction.Previous()));
-                
+                    HexMetrics.GetFirstWaterCorner(direction.Previous()) :
+                    HexMetrics.GetFirstSolidCorner(direction.Previous()));
+
                 v3.y = center.y;
                 waterShore.AddTriangle(e1.v5, e2.v5, v3);
 
@@ -358,6 +381,29 @@ namespace HexMap
                                          new Vector2(0f, 1f),
                                          new Vector2(0f, nextNeighbor.IsUnderWater ? 0f : 1f));
             }
+        }
+
+        /// <summary>
+        /// 当接近海岸的水域连接着一条河流时，这部分水域被视为河口
+        /// </summary>
+        private void TriangulateEstuary(EdgeVertices e1, EdgeVertices e2)
+        {
+            waterShore.AddTriangle(e2.v1, e1.v2, e1.v1);
+            waterShore.AddTriangle(e2.v5, e1.v5, e1.v4);
+            waterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+            waterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+
+            estuaries.AddQuad(e2.v1, e1.v2, e2.v2, e1.v3);
+            estuaries.AddTriangle(e1.v3, e2.v2, e2.v4);
+            estuaries.AddQuad(e1.v3, e1.v4, e2.v4, e2.v5);
+
+            estuaries.AddQuadUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0f));
+            estuaries.AddTriangleUV(new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            estuaries.AddQuadUV(0f, 0f, 0f, 1f);
+
+            estuaries.AddQuadUV2(new Vector2(1f, 0.8f), new Vector2(1f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0.5f, 1.1f));
+            estuaries.AddTriangleUV2(new Vector2(0.5f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0f, 0.8f));
+            estuaries.AddQuadUV2(new Vector2(0.5f, 1.1f), new Vector2(0f, 1.1f), new Vector2(0f, 0.8f), new Vector2(0f, 0.8f));
         }
 
         /// <summary>
@@ -397,9 +443,26 @@ namespace HexMap
             {
                 e2.v3.y = neighbor.StreamBedY;
 
-                TriangulateRiverQuad(e1.v2, e1.v4, e2.v2, e2.v4,
-                    cell.RiverSurfaceY, neighbor.RiverSurfaceY, 0.8f,
-                    cell.HasIncomingRiver && cell.IncomingRiver == direction);
+                if (!cell.IsUnderWater) // 单元格不处于水中
+                {
+                    if (!neighbor.IsUnderWater) // 相邻单元格同样不处于水中，生成河流
+                    {
+                        TriangulateRiverQuad(e1.v2, e1.v4, e2.v2, e2.v4,
+                            cell.RiverSurfaceY, neighbor.RiverSurfaceY, 0.8f,
+                            cell.HasIncomingRiver && cell.IncomingRiver == direction);
+                    }
+                    else if (cell.Elevation > neighbor.WaterLevel) // 相邻单元格处于水中且水位低于当前单元格的海拔
+                    {
+                        TriangulateWaterfallInWater(e1.v2, e1.v4, e2.v2, e2.v4,
+                            cell.RiverSurfaceY, neighbor.RiverSurfaceY, neighbor.WaterSurfaceY);
+                    }
+                }
+                // 单元格处于水中且相邻单元格海拔高于水位高度，同样需要生成瀑布
+                else if (!neighbor.IsUnderWater && neighbor.Elevation > cell.WaterLevel)
+                {
+                    TriangulateWaterfallInWater(e2.v4, e2.v2, e1.v4, e1.v2,
+                        neighbor.RiverSurfaceY, cell.RiverSurfaceY, cell.WaterSurfaceY);
+                }
             }
 
             // 判断单元格与相邻单元格之间的连接类型
@@ -486,6 +549,43 @@ namespace HexMap
             TriangulateEdgeStrip(e2, c2, end, endCell.Color, hasRoad);
         }
 
+        /// <summary>
+        /// 生成瀑布
+        /// <para>
+        /// 当高处的河流流向低处的水域时，就会产生瀑布；也就是说河流所在单元格的海拔高度
+        /// 大于河流流向水域的水平面高度
+        /// </para>
+        /// </summary>
+        /// <param name="v1">河流高处的第一个顶点</param>
+        /// <param name="v2">河流高处的第二个顶点</param>
+        /// <param name="v3">河流低处的第一个顶点</param>
+        /// <param name="v4">河流低处的第二个顶点</param>
+        /// <param name="y1">河流高处的水面高度</param>
+        /// <param name="y2">河流低处的水面高度</param>
+        /// <param name="waterY">河流流向的水域水面高度</param>
+        private void TriangulateWaterfallInWater(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,
+                                                 float y1, float y2, float waterY)
+        {
+            v1.y = v2.y = y1;
+            v3.y = v4.y = y2;
+
+            v1 = HexMetrics.Perturb(v1);
+            v2 = HexMetrics.Perturb(v2);
+            v3 = HexMetrics.Perturb(v3);
+            v4 = HexMetrics.Perturb(v4);
+
+            float t = (waterY - y2) / (y1 - y2);
+            v3 = Vector3.Lerp(v3, v1, t);
+            v4 = Vector3.Lerp(v4, v2, t);
+
+            river.AddQuadUnperturbed(v1, v2, v3, v4);
+            river.AddQuadUV(0f, 1f, 0.8f, 1f);
+        }
+
+        /// <summary>
+        /// 生成单元格三角形上的道路，即使该方向上的三角形没有道路，也需要在单元格中心点处生成个
+        /// 小三角形，以补充其他方向的道路，使其看起来更均匀
+        /// </summary>
         private void TriangulateRoad(Vector3 center, Vector3 mL, Vector3 mR, EdgeVertices e, bool hasRoad)
         {
             if (hasRoad)
@@ -504,31 +604,40 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 当单元格内有河流时，河流会影响单元格的终点，甚至截断道路，所以需要针对单元格有河流的情况做处理
+        /// </summary>
         private void TriangulateRoadAdjacentRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
         {
-            bool hasRoad = cell.HasRoadThroughEdge(direction);
+            bool hasRoad = cell.HasRoadThroughEdge(direction); // 当前方向上是否有道路
+            // 与当前方向相邻的两个方向上是否有河流，以此判断道路是否与河流相邻
             bool previousHasRiver = cell.HasRiverThroughEdge(direction.Previous());
             bool nextHasRiver = cell.HasRiverThroughEdge(direction.Next());
 
             Vector2 interpolators = GetRoadInterpolators(direction, cell);
+            // 道路的中心点，与单元格的中心点不同，因为河流会覆盖单元格中心点，
+            // 所以道路的中心点需要做偏移，且单元格中心点根据情况可能也要偏移
             Vector3 roadCenter = center;
 
-            if (cell.HasRiverBeginOrEnd)
+            /*
+             * 根据情况计算道路中心点和单元格中心点
+             */
+            if (cell.HasRiverBeginOrEnd) // 河流是源头或末尾，也就是说河流只占了一个三角形面片，调整下道路中心就行
             {
                 roadCenter += HexMetrics.GetSolidEdgeMiddle(cell.RiverBeginOrEndDirection.Opposite()) * (1f / 3f);
             }
-            else if (cell.IncomingRiver == cell.OutgoingRiver.Opposite())
+            else if (cell.IncomingRiver == cell.OutgoingRiver.Opposite()) // 直流
             {
                 Vector3 corner;
                 if (previousHasRiver)
                 {
-                    if (!hasRoad && !cell.HasRoadThroughEdge(direction.Next())) return;
+                    if (!hasRoad && !cell.HasRoadThroughEdge(direction.Next())) return; // 道路在河流对面被截断，不需要生成补充部分
 
                     corner = HexMetrics.GetSecondSolidCorner(direction);
                 }
                 else
                 {
-                    if (!hasRoad && !cell.HasRoadThroughEdge(direction.Previous())) return;
+                    if (!hasRoad && !cell.HasRoadThroughEdge(direction.Previous())) return; // 道路在河流对面被截断，不需要生成补充部分
 
                     corner = HexMetrics.GetFirstSolidCorner(direction);
                 }
@@ -536,23 +645,23 @@ namespace HexMap
                 roadCenter += corner * 0.5f;
                 center += corner * 0.25f;
             }
-            else if (cell.IncomingRiver == cell.OutgoingRiver.Previous())
+            else if (cell.IncomingRiver == cell.OutgoingRiver.Previous()) // 河流大角度转弯，也就是说不存在道路被截断的情况
             {
                 roadCenter -= HexMetrics.GetSecondCorner(cell.IncomingRiver) * 0.2f;
             }
-            else if (cell.IncomingRiver == cell.OutgoingRiver.Next())
+            else if (cell.IncomingRiver == cell.OutgoingRiver.Next()) // 河流大角度转弯，也就是说不存在道路被截断的情况
             {
                 roadCenter -= HexMetrics.GetFirstCorner(cell.IncomingRiver) * 0.2f;
             }
-            else if (previousHasRiver && nextHasRiver)
+            else if (previousHasRiver && nextHasRiver) // 河流小角度转弯，且当前方向在被包围的那一边
             {
-                if (!hasRoad) return;
+                if (!hasRoad) return; // 道路在河流对面被截断，不需要生成补充部分
 
                 Vector3 offset = HexMetrics.GetSolidEdgeMiddle(direction) * HexMetrics.innerToOuter;
                 roadCenter += offset * 0.75f;
                 center += offset * 0.5f;
             }
-            else
+            else // 河流小角度转弯，且当前方向不在被包围的那一边
             {
                 HexDirection middle;
                 if (previousHasRiver)
@@ -601,12 +710,19 @@ namespace HexMap
             road.AddQuadUV(1f, 0f, 0f, 0f);
         }
 
+        /// <summary>
+        /// 对于没有道路的三角形来说，需要为它们生成一个小三角形，以补充其他方向上的道路
+        /// </summary>
         private void TriangulateRoadEdge(Vector3 center, Vector3 mL, Vector3 mR)
         {
             road.AddTriangle(center, mL, mR);
             road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         }
 
+        /// <summary>
+        /// 不管是道路本身的三角形部分，还是没有道路的方向上的三角形补充部分，都只覆盖整个三角形
+        /// 的一部分，且覆盖的程度不同，所以通过该方法，获取道路三角形占整个单元格三角形的比例
+        /// </summary>
         private Vector2 GetRoadInterpolators(HexDirection direction, HexCell cell)
         {
             Vector2 interpolators;

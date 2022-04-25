@@ -94,7 +94,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 1
   useUV2: 1
-  drawWireFrame: 1
+  drawWireFrame: 0
 --- !u!1 &1786109512543307464
 GameObject:
   m_ObjectHideFlags: 0

@@ -3707,6 +3707,8 @@ MonoBehaviour:
   useCollider: 0
   useColor: 0
   useUV: 0
+  useUV2: 0
+  drawWireFrame: 0
 --- !u!23 &1057835190
 MeshRenderer:
   m_ObjectHideFlags: 0

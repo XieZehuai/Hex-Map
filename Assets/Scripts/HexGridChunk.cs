@@ -348,10 +348,10 @@ namespace HexMap
             EdgeVertices e2 = new EdgeVertices(center2 + HexMetrics.GetSecondSolidCorner(direction.Opposite()),
                                                center2 + HexMetrics.GetFirstSolidCorner(direction.Opposite()));
 
-            // 如果当前海岸连接着一条河流，说明有水从河流流入到当前水域
+            // 如果当前海岸连接着一条河流，说明有水从河流流入到当前水域或水从当前水域流入河流
             if (cell.HasRiverThroughEdge(direction))
             {
-                TriangulateEstuary(e1, e2);
+                TriangulateEstuary(e1, e2, cell.HasIncomingRiver && cell.IncomingRiver == direction);
             }
             else
             {
@@ -386,7 +386,7 @@ namespace HexMap
         /// <summary>
         /// 当接近海岸的水域连接着一条河流时，这部分水域被视为河口
         /// </summary>
-        private void TriangulateEstuary(EdgeVertices e1, EdgeVertices e2)
+        private void TriangulateEstuary(EdgeVertices e1, EdgeVertices e2, bool incomingRiver)
         {
             waterShore.AddTriangle(e2.v1, e1.v2, e1.v1);
             waterShore.AddTriangle(e2.v5, e1.v5, e1.v4);
@@ -397,13 +397,44 @@ namespace HexMap
             estuaries.AddTriangle(e1.v3, e2.v2, e2.v4);
             estuaries.AddQuad(e1.v3, e1.v4, e2.v4, e2.v5);
 
-            estuaries.AddQuadUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0f));
-            estuaries.AddTriangleUV(new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-            estuaries.AddQuadUV(0f, 0f, 0f, 1f);
+            estuaries.AddQuadUV(new Vector2(0f, 1f), new Vector2(0f, 0f),
+                                new Vector2(1f, 1f), new Vector2(0f, 0f));
+            estuaries.AddTriangleUV(new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(1f, 1f));
+            estuaries.AddQuadUV(new Vector2(0f, 0f), new Vector2(0f, 0f),
+                                new Vector2(1f, 1f), new Vector2(0f, 1f));
 
-            estuaries.AddQuadUV2(new Vector2(1f, 0.8f), new Vector2(1f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0.5f, 1.1f));
-            estuaries.AddTriangleUV2(new Vector2(0.5f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0f, 0.8f));
-            estuaries.AddQuadUV2(new Vector2(0.5f, 1.1f), new Vector2(0f, 1.1f), new Vector2(0f, 0.8f), new Vector2(0f, 0.8f));
+            if (incomingRiver)
+            {
+                estuaries.AddQuadUV2(
+                    new Vector2(1.5f, 1f), new Vector2(0.7f, 1.15f),
+                    new Vector2(1f, 0.8f), new Vector2(0.5f, 1.1f)
+                );
+                estuaries.AddTriangleUV2(
+                    new Vector2(0.5f, 1.1f),
+                    new Vector2(1f, 0.8f),
+                    new Vector2(0f, 0.8f)
+                );
+                estuaries.AddQuadUV2(
+                    new Vector2(0.5f, 1.1f), new Vector2(0.3f, 1.15f),
+                    new Vector2(0f, 0.8f), new Vector2(-0.5f, 1f)
+                );
+            }
+            else
+            {
+                estuaries.AddQuadUV2(
+                    new Vector2(-0.5f, -0.2f), new Vector2(0.3f, -0.35f),
+                    new Vector2(0f, 0f), new Vector2(0.5f, -0.3f)
+                );
+                estuaries.AddTriangleUV2(
+                    new Vector2(0.5f, -0.3f),
+                    new Vector2(0f, 0f),
+                    new Vector2(1f, 0f)
+                );
+                estuaries.AddQuadUV2(
+                    new Vector2(0.5f, -0.3f), new Vector2(0.7f, -0.35f),
+                    new Vector2(1f, 0f), new Vector2(1.5f, -0.2f)
+                );
+            }
         }
 
         /// <summary>

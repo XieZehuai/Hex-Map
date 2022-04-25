@@ -70,14 +70,7 @@ namespace HexMap
                 /*
                  * 因为河流无法向高处流，所以修改海拔后要判断河流是否合法
                  */
-                if (hasOutgoingRiver && elevation < GetNeighbor(outgoingRiver).elevation)
-                {
-                    RemoveOutgoingRiver();
-                }
-                if (hasIncomingRiver && elevation > GetNeighbor(incomingRiver).elevation)
-                {
-                    RemoveIncomingRiver();
-                }
+                ValidateRivers();
 
                 /*
                  * 道路无法太陡峭，所以改变海拔后要检查道路的合法性
@@ -136,6 +129,7 @@ namespace HexMap
                 if (waterLevel == value) return;
 
                 waterLevel = value;
+                ValidateRivers();
                 Refresh();
             }
         }
@@ -205,6 +199,19 @@ namespace HexMap
         }
 
         /// <summary>
+        /// 判断当前单元格上的河流是否能流向目标单元格
+        /// <para>
+        /// 河流无法向上流，所以当前单元格的海拔大于等于目标单元格的海拔时，河流能流向目标单元格；
+        /// 当当前单元格被水覆盖，且水平面高度等于目标单元格的海拔时，河流能流向目标单元格，因为
+        /// 水平面的高度与河流水平面的高度相同。
+        /// </para>
+        /// </summary>
+        public bool IsValidRiverDestination(HexCell neighbor)
+        {
+            return neighbor != null && (elevation >= neighbor.elevation || waterLevel == neighbor.elevation);
+        }
+
+        /// <summary>
         /// 在目标方向上添加一条流出的河流，会检测河流的合法性，只有合法才会设置河流（会覆盖该方向上的道路）
         /// </summary>
         public void SetOutgoingRiver(HexDirection direction)
@@ -214,9 +221,9 @@ namespace HexMap
                 return;
             }
 
-            // 河流流出的部分必须连接到相邻单元格上的流入部分，且河流无法向上流
             HexCell neighbor = GetNeighbor(direction);
-            if (neighbor == null || neighbor.elevation > elevation)
+            // 河流无法流向相邻单元格，直接返回
+            if (!IsValidRiverDestination(neighbor))
             {
                 return;
             }
@@ -286,6 +293,18 @@ namespace HexMap
         {
             RemoveOutgoingRiver();
             RemoveIncomingRiver();
+        }
+
+        private void ValidateRivers()
+        {
+            if (hasOutgoingRiver && !IsValidRiverDestination(GetNeighbor(outgoingRiver)))
+            {
+                RemoveOutgoingRiver();
+            }
+            if (hasIncomingRiver && !GetNeighbor(incomingRiver).IsValidRiverDestination(this))
+            {
+                RemoveIncomingRiver();
+            }
         }
         #endregion
 

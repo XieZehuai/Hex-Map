@@ -14,7 +14,7 @@
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard alpha
+        #pragma surface surf Standard alpha vertex:vert
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -26,7 +26,7 @@
         struct Input
         {
             float2 uv_MainTex;
-            float2 uv2_MainTex;
+            float2 riverUV;
             float3 worldPos;
         };
 
@@ -41,6 +41,12 @@
         // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
+        void vert(inout appdata_full v, out Input o)
+        {
+            UNITY_INITIALIZE_OUTPUT(Input, o);
+            o.riverUV = v.texcoord1.xy;
+        }
+
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             float shore = IN.uv_MainTex.y;
@@ -48,9 +54,13 @@
             float waves = Waves(IN.worldPos.xz, _MainTex);
             waves *= 1 - shore;
 
-            float river = River(IN.uv2_MainTex, _MainTex);
+            float shoreWater = max(foam, waves);
 
-            fixed4 c = saturate(_Color + river);
+            float river = River(IN.riverUV, _MainTex);
+
+            float water = lerp(shoreWater, river, IN.uv_MainTex.x);
+
+            fixed4 c = saturate(_Color + water);
             o.Albedo = c.rgb;
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

@@ -6,6 +6,8 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+
+        _FlowSpeed ("Flow Speed", Range(0, 2)) = 0.1
     }
     SubShader
     {
@@ -33,6 +35,7 @@
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
+        float _FlowSpeed;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -56,7 +59,7 @@
 
             float shoreWater = max(foam, waves);
 
-            float river = River(IN.riverUV, _MainTex);
+            float river = River(IN.riverUV, _MainTex, _FlowSpeed);
 
             float water = lerp(shoreWater, river, IN.uv_MainTex.x);
 

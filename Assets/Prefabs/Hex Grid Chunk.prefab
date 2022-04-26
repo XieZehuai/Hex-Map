@@ -108,7 +108,7 @@ GameObject:
   - component: {fileID: 8508583790442019828}
   - component: {fileID: 147884107925265453}
   m_Layer: 0
-  m_Name: Road
+  m_Name: Roads
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -190,6 +190,59 @@ MonoBehaviour:
   useUV: 1
   useUV2: 0
   drawWireFrame: 0
+--- !u!1 &2615211349300457920
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 546135580979029745}
+  - component: {fileID: 4399575786873763243}
+  m_Layer: 0
+  m_Name: Features
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &546135580979029745
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2615211349300457920}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 8266012465426326502}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4399575786873763243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2615211349300457920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f7d305a68dfd2c41a22af287e562541, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  urbanCollections:
+  - prefabs:
+    - {fileID: 6822296280487507403, guid: 4e9cae95a0fa0264bbd14fae5c23a18f, type: 3}
+    - {fileID: 3890622630751757862, guid: 9deeec82b34e4704b97c15595c8dfb4e, type: 3}
+  - prefabs:
+    - {fileID: 2120485497069339270, guid: 304c419b36676f74c8cd4d6e40d1ba5d, type: 3}
+    - {fileID: 3056019920459701161, guid: 4945c114818c64a4295cc610510f8f1d, type: 3}
+  - prefabs:
+    - {fileID: 2421933855567218806, guid: c8c8ef20773aca34ca6f8c23defaa780, type: 3}
+    - {fileID: 2308420863570559042, guid: 66c5a608ff0422a4683e8d895c0da01d, type: 3}
 --- !u!1 &3730914186112670422
 GameObject:
   m_ObjectHideFlags: 0
@@ -393,7 +446,7 @@ GameObject:
   - component: {fileID: 6836955630763718139}
   - component: {fileID: 9208775246863530738}
   m_Layer: 0
-  m_Name: River
+  m_Name: Rivers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -510,6 +563,7 @@ Transform:
   - {fileID: 1545231444089524932}
   - {fileID: 2708999425519458914}
   - {fileID: 1504681835202521438}
+  - {fileID: 546135580979029745}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -526,11 +580,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrain: {fileID: 8266012466192315665}
-  river: {fileID: 9208775246863530738}
-  road: {fileID: 147884107925265453}
+  rivers: {fileID: 9208775246863530738}
+  roads: {fileID: 147884107925265453}
   water: {fileID: 4705372736984071934}
   waterShore: {fileID: 6609430725695957553}
   estuaries: {fileID: 6908070854634052760}
+  features: {fileID: 4399575786873763243}
 --- !u!1 &8266012466140414892
 GameObject:
   m_ObjectHideFlags: 0

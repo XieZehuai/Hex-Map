@@ -7,7 +7,7 @@
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
 
-        _FlowSpeed ("Flow Speed", Range(0, 2)) = 0.25
+        _FlowSpeed ("Flow Speed", Range(0, 2)) = 0.1
     }
     SubShader
     {
@@ -44,7 +44,7 @@
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float river = River(IN.uv_MainTex, _MainTex);
+            float river = River(IN.uv_MainTex, _MainTex, _FlowSpeed);
 
             fixed4 c = saturate(_Color + river);
             o.Albedo = c.rgb;

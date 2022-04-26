@@ -12,17 +12,24 @@ namespace HexMap.Editor
         public HexGrid hexGrid;
 
         private bool applyColor;
-        private bool applyElevation = true;
-        private bool applyWaterLevel = true;
         private Color activeColor; // 当前选中的颜色
+
+        private bool applyElevation = true;
         private int activeElevation; // 当前选中的海拔高度
+
+        private bool applyWaterLevel = true;
         private int activeWaterLevel;
+
+        private bool applyUrbanLevel;
+        private int activeUrbanLevel;
+
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
         private OptionalToggle riverMode; // 河流的编辑模式
         private OptionalToggle roadMode; // 道路的编辑模式
 
         // 用于检测鼠标拖动输入
         private bool isDrag;
+        private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
         private HexDirection dragDirection;
         private HexCell previousCell;
 
@@ -33,8 +40,18 @@ namespace HexMap.Editor
 
         private void Update()
         {
+            bool isPointOverUI = EventSystem.current.IsPointerOverGameObject();
+            if (Input.GetMouseButtonDown(0) && isPointOverUI)
+            {
+                isDragOnUI = true;
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                isDragOnUI = false;
+            }
+
             // 当点击鼠标左键并且鼠标不处于UI上时处理点击操作
-            if (Input.GetMouseButton(0) && !EventSystem.current.IsPointerOverGameObject())
+            if (Input.GetMouseButton(0) && !isPointOverUI && !isDragOnUI)
             {
                 HandleInput();
             }
@@ -121,6 +138,11 @@ namespace HexMap.Editor
             {
                 cell.WaterLevel = activeWaterLevel;
             }
+            if (applyUrbanLevel)
+            {
+                cell.UrbanLevel = activeUrbanLevel;
+            }
+
             if (riverMode == OptionalToggle.No)
             {
                 cell.RemoveRiver();
@@ -200,6 +222,16 @@ namespace HexMap.Editor
         public void SetRoadMode(int mode)
         {
             roadMode = (OptionalToggle)mode;
+        }
+
+        public void SetApplyUrbanLevel(bool toggle)
+        {
+            applyUrbanLevel = toggle;
+        }
+
+        public void SetUrbanLevel(float level)
+        {
+            activeUrbanLevel = (int)level;
         }
 
         public void RefreshEntireGrid()

@@ -10,12 +10,13 @@ namespace HexMap
     /// </summary>
     public class HexGridChunk : MonoBehaviour
     {
-        [SerializeField] private HexMesh terrain = default;
-        [SerializeField] private HexMesh river = default;
-        [SerializeField] private HexMesh road = default;
-        [SerializeField] private HexMesh water = default;
-        [SerializeField] private HexMesh waterShore = default;
-        [SerializeField] private HexMesh estuaries = default;
+        [SerializeField] private HexMesh terrain = default; // 控制所有地形的网格
+        [SerializeField] private HexMesh rivers = default; // 控制所有河流的网格
+        [SerializeField] private HexMesh roads = default; // 控制所有道路的网格
+        [SerializeField] private HexMesh water = default; // 控制所有开放水域的网格
+        [SerializeField] private HexMesh waterShore = default; // 控制所有海岸水域的网格
+        [SerializeField] private HexMesh estuaries = default; // 控制所有河口的网格
+        [SerializeField] private HexFeatureManager features = default;
 
         private HexCell[] cells;
         private Canvas gridCanvas;
@@ -66,11 +67,12 @@ namespace HexMap
         public void Triangulate()
         {
             terrain.Clear();
-            river.Clear();
-            road.Clear();
+            rivers.Clear();
+            roads.Clear();
             water.Clear();
             waterShore.Clear();
             estuaries.Clear();
+            features.Clear();
 
             for (int i = 0; i < cells.Length; i++)
             {
@@ -78,11 +80,12 @@ namespace HexMap
             }
 
             terrain.Apply();
-            river.Apply();
-            road.Apply();
+            rivers.Apply();
+            roads.Apply();
             water.Apply();
             waterShore.Apply();
             estuaries.Apply();
+            features.Apply();
         }
 
         /// <summary>
@@ -94,6 +97,12 @@ namespace HexMap
             for (HexDirection direction = HexDirection.NE; direction <= HexDirection.NW; direction++)
             {
                 Triangulate(direction, cell);
+            }
+
+            // 在单元格中心添加细节
+            if (!cell.HasRoads && !cell.HasRiver && !cell.IsUnderWater)
+            {
+                features.AddFeature(cell, cell.Position);
             }
         }
 
@@ -130,6 +139,11 @@ namespace HexMap
             else
             {
                 TriangulateWithoutRiver(direction, cell, center, e);
+
+                if (!cell.IsUnderWater && !cell.HasRoadThroughEdge(direction))
+                {
+                    features.AddFeature(cell, (center + e.v1 + e.v5) * (1f / 3f));
+                }
             }
 
             // 生成当前单元格与相邻单元格之间的过渡部分
@@ -163,14 +177,14 @@ namespace HexMap
                 TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
 
                 center.y = m.v2.y = m.v4.y = cell.RiverSurfaceY;
-                river.AddTriangle(center, m.v2, m.v4);
+                rivers.AddTriangle(center, m.v2, m.v4);
                 if (reversed)
                 {
-                    river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
+                    rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
                 }
                 else
                 {
-                    river.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
+                    rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
                 }
             }
         }
@@ -268,6 +282,11 @@ namespace HexMap
 
             TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
             TriangulateEdgeFan(center, m, cell.Color);
+
+            if (!cell.IsUnderWater && !cell.HasRoadThroughEdge(direction))
+            {
+                features.AddFeature(cell, (center + e.v1 + e.v5) * (1f / 3f));
+            }
         }
 
         /// <summary>
@@ -609,8 +628,8 @@ namespace HexMap
             v3 = Vector3.Lerp(v3, v1, t);
             v4 = Vector3.Lerp(v4, v2, t);
 
-            river.AddQuadUnperturbed(v1, v2, v3, v4);
-            river.AddQuadUV(0f, 1f, 0.8f, 1f);
+            rivers.AddQuadUnperturbed(v1, v2, v3, v4);
+            rivers.AddQuadUV(0f, 1f, 0.8f, 1f);
         }
 
         /// <summary>
@@ -624,10 +643,10 @@ namespace HexMap
                 Vector3 mC = Vector3.Lerp(mL, mR, 0.5f);
                 TriangulateRoadSegment(mL, mC, mR, e.v2, e.v3, e.v4);
 
-                road.AddTriangle(center, mL, mC);
-                road.AddTriangle(center, mC, mR);
-                road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f));
-                road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
+                roads.AddTriangle(center, mL, mC);
+                roads.AddTriangle(center, mC, mR);
+                roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(1f, 0f));
+                roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f));
             }
             else
             {
@@ -735,10 +754,10 @@ namespace HexMap
         private void TriangulateRoadSegment(Vector3 v1, Vector3 v2, Vector3 v3,
             Vector3 v4, Vector3 v5, Vector3 v6)
         {
-            road.AddQuad(v1, v2, v4, v5);
-            road.AddQuad(v2, v3, v5, v6);
-            road.AddQuadUV(0f, 1f, 0f, 0f);
-            road.AddQuadUV(1f, 0f, 0f, 0f);
+            roads.AddQuad(v1, v2, v4, v5);
+            roads.AddQuad(v2, v3, v5, v6);
+            roads.AddQuadUV(0f, 1f, 0f, 0f);
+            roads.AddQuadUV(1f, 0f, 0f, 0f);
         }
 
         /// <summary>
@@ -746,8 +765,8 @@ namespace HexMap
         /// </summary>
         private void TriangulateRoadEdge(Vector3 center, Vector3 mL, Vector3 mR)
         {
-            road.AddTriangle(center, mL, mR);
-            road.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+            roads.AddTriangle(center, mL, mR);
+            roads.AddTriangleUV(new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         }
 
         /// <summary>
@@ -928,15 +947,15 @@ namespace HexMap
         {
             v1.y = v2.y = y1;
             v3.y = v4.y = y2;
-            river.AddQuad(v1, v2, v3, v4);
+            rivers.AddQuad(v1, v2, v3, v4);
 
             if (reversed)
             {
-                river.AddQuadUV(1f, 0f, 0.8f - v, 0.6f - v);
+                rivers.AddQuadUV(1f, 0f, 0.8f - v, 0.6f - v);
             }
             else
             {
-                river.AddQuadUV(0f, 1f, v, v + 0.2f);
+                rivers.AddQuadUV(0f, 1f, v, v + 0.2f);
             }
         }
     }

@@ -12,27 +12,11 @@ namespace HexMap
         public HexGridChunk chunk;
         public RectTransform uiRect;
 
-        [SerializeField] private HexCell[] neighbors = default;
+        [SerializeField] private HexCell[] neighbors = default; // 将字段标记为 SerializeField 可实现热重载
 
-        /// <summary>
-        /// 单元格上的道路，与河流不同，一个单元格上的六个方向都可以有道路，所以用一个数组
-        /// 来保存每个方向上道路的情况
-        /// </summary>
-        [SerializeField] private bool[] roads = new bool[6];
-
+        #region 单元格基础属性
         private int elevation = int.MinValue;
         private Color color;
-        private int waterLevel;
-
-        /*
-         * 对于一个单元格来说，它的河流可以分为没有河流以及有河流穿过，对于穿过的河流，可以
-         * 将其分为流入和流出两个部分，如果单元格是河流的源头，那就只有流出部分，如果单元格
-         * 是河流末尾，那就只有流入部分
-         */
-        private bool hasIncomingRiver; // 是否有河流流入
-        private bool hasOutgoingRiver; // 是否有河流流出
-        private HexDirection incomingRiver; // 河流流入的方向
-        private HexDirection outgoingRiver; // 河流流出的方向
 
         public Color Color
         {
@@ -88,10 +72,29 @@ namespace HexMap
         }
 
         public Vector3 Position => transform.localPosition;
+        #endregion
+
+        #region 道路相关属性
+        /// <summary>
+        /// 单元格上的道路，与河流不同，一个单元格上的六个方向都可以有道路，所以用一个数组
+        /// 来保存每个方向上道路的情况
+        /// </summary>
+        [SerializeField] private bool[] roads = new bool[6];
 
         public bool HasRoads => roads.Any(road => road);
+        #endregion
 
         #region 河流相关属性
+        /*
+         * 对于一个单元格来说，它的河流可以分为没有河流以及有河流穿过，对于穿过的河流，可以
+         * 将其分为流入和流出两个部分，如果单元格是河流的源头，那就只有流出部分，如果单元格
+         * 是河流末尾，那就只有流入部分
+         */
+        private bool hasIncomingRiver; // 是否有河流流入
+        private bool hasOutgoingRiver; // 是否有河流流出
+        private HexDirection incomingRiver; // 河流流入的方向
+        private HexDirection outgoingRiver; // 河流流出的方向
+
         public bool HasIncomingRiver => hasIncomingRiver;
         public bool HasOutgoingRiver => hasOutgoingRiver;
         public bool HasRiver => hasIncomingRiver || hasOutgoingRiver;
@@ -113,6 +116,8 @@ namespace HexMap
         #endregion
 
         #region 水域相关属性
+        private int waterLevel;
+
         /// <summary>
         /// 单元格所处水域的水平面高度（单位海拔）
         /// <para>
@@ -355,6 +360,26 @@ namespace HexMap
 
             neighbors[index].RefreshSelfOnly();
             RefreshSelfOnly();
+        }
+        #endregion
+
+        #region 单元格细节相关属性
+        private int urbanLevel;
+
+        /// <summary>
+        /// 单元格的城市化水平，控制单元格内的建筑数量，0为最低水平，也就是没有任何建筑
+        /// </summary>
+        public int UrbanLevel
+        {
+            get => urbanLevel;
+            set
+            {
+                if (urbanLevel != value)
+                {
+                    urbanLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
         }
         #endregion
 

@@ -15,6 +15,7 @@ namespace HexMap
         [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
         [SerializeField] private Texture2D noiseSource = default;
+        [SerializeField] private int seed = 1234;
 
         private int cellCountX;
         private int cellCountZ;
@@ -27,6 +28,7 @@ namespace HexMap
         private void Awake()
         {
             HexMetrics.noiseSource = noiseSource;
+            HexMetrics.InitializeHashGrid(seed);
 
             cellCountX = chunkCountX * HexMetrics.chunkSizeX;
             cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ;
@@ -37,7 +39,11 @@ namespace HexMap
 
         private void OnEnable()
         {
-            HexMetrics.noiseSource = noiseSource;
+            if (HexMetrics.noiseSource == null)
+            {
+                HexMetrics.noiseSource = noiseSource;
+                HexMetrics.InitializeHashGrid(seed);
+            }
         }
 
         /// <summary>

@@ -60,11 +60,11 @@ namespace HexMap
         /// <summary>
         /// 网格顶点位置被噪声扰动的强度
         /// </summary>
-        public const float cellPerturbStrength = 0f; // 4f
+        public const float cellPerturbStrength = 4f; // 4f
         /// <summary>
         /// 单元格海拔扰动强度，单元格的 y 坐标会在 [-elevationPerturbStrength, elevationPerturbStrength] 之间浮动
         /// </summary>
-        public const float elevationPerturbStrength = 1f;
+        public const float elevationPerturbStrength = 1.5f; // 1f
 
         /// <summary>
         /// 单元格之间梯田类型连接的台阶数量
@@ -199,6 +199,57 @@ namespace HexMap
         public static Vector4 SampleNoise(Vector3 position)
         {
             return noiseSource.GetPixelBilinear(position.x * noiseScale, position.z * noiseScale);
+        }
+
+        #region 不规则噪声
+        public const int hashGridSize = 256;
+        public const float hashGridScale = 0.25f;
+
+        private static HexHash[] hashGrid;
+
+        public static void InitializeHashGrid(int seed)
+        {
+            hashGrid = new HexHash[hashGridSize * hashGridSize];
+
+            Random.State currentState = Random.state;
+            Random.InitState(seed);
+
+            for (int i = 0; i < hashGrid.Length; i++)
+            {
+                hashGrid[i] = HexHash.Create();
+            }
+
+            Random.state = currentState;
+        }
+
+        public static HexHash SampleHashGrid(Vector3 position)
+        {
+            int x = (int)(position.x * hashGridScale) % hashGridSize;
+            if (x < 0)
+            {
+                x += hashGridSize;
+            }
+
+            int z = (int)(position.z * hashGridScale) % hashGridSize;
+            if (z < 0)
+            {
+                z += hashGridSize;
+            }
+
+            return hashGrid[x + z * hashGridSize];
+        }
+        #endregion
+
+        private static readonly float[][] featureThresholds =
+        {
+            new float[] { 0.0f, 0.0f, 0.4f },
+            new float[] { 0.0f, 0.4f, 0.6f },
+            new float[] { 0.4f, 0.6f, 0.8f },
+        };
+
+        public static float[] GetFeatureThresholds(int level)
+        {
+            return featureThresholds[level];
         }
     }
 }

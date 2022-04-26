@@ -365,6 +365,8 @@ namespace HexMap
 
         #region 单元格细节相关属性
         private int urbanLevel;
+        private int farmLevel;
+        private int plantLevel;
 
         /// <summary>
         /// 单元格的城市化水平，控制单元格内的建筑数量，0为最低水平，也就是没有任何建筑
@@ -377,6 +379,32 @@ namespace HexMap
                 if (urbanLevel != value)
                 {
                     urbanLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public int FarmLevel
+        {
+            get => farmLevel;
+            set
+            {
+                if (farmLevel != value)
+                {
+                    farmLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public int PlantLevel
+        {
+            get => plantLevel;
+            set
+            {
+                if (plantLevel != value)
+                {
+                    plantLevel = value;
                     RefreshSelfOnly();
                 }
             }

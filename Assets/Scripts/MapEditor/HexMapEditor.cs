@@ -11,21 +11,32 @@ namespace HexMap.Editor
         public Color[] colors;
         public HexGrid hexGrid;
 
+        #region 地形编辑选项
         private bool applyColor;
         private Color activeColor; // 当前选中的颜色
 
-        private bool applyElevation = true;
+        private bool applyElevation;
         private int activeElevation; // 当前选中的海拔高度
 
-        private bool applyWaterLevel = true;
+        private bool applyWaterLevel;
         private int activeWaterLevel;
 
+        private OptionalToggle riverMode; // 河流的编辑模式
+        private OptionalToggle roadMode; // 道路的编辑模式
+        #endregion
+
+        #region 单元格细节编辑选项
         private bool applyUrbanLevel;
         private int activeUrbanLevel;
 
+        private bool applyFarmLevel;
+        private int activeFarmLevel;
+
+        private bool applyPlantLevel;
+        private int activePlantLevel;
+        #endregion
+
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
-        private OptionalToggle riverMode; // 河流的编辑模式
-        private OptionalToggle roadMode; // 道路的编辑模式
 
         // 用于检测鼠标拖动输入
         private bool isDrag;
@@ -142,6 +153,14 @@ namespace HexMap.Editor
             {
                 cell.UrbanLevel = activeUrbanLevel;
             }
+            if (applyFarmLevel)
+            {
+                cell.FarmLevel = activeFarmLevel;
+            }
+            if (applyPlantLevel)
+            {
+                cell.PlantLevel = activePlantLevel;
+            }
 
             if (riverMode == OptionalToggle.No)
             {
@@ -232,6 +251,26 @@ namespace HexMap.Editor
         public void SetUrbanLevel(float level)
         {
             activeUrbanLevel = (int)level;
+        }
+
+        public void SetApplyFarmLevel(bool toggle)
+        {
+            applyFarmLevel = toggle;
+        }
+
+        public void SetFarmLevel(float level)
+        {
+            activeFarmLevel = (int)level;
+        }
+
+        public void SetApplyPlantLevel(bool toggle)
+        {
+            applyPlantLevel = toggle;
+        }
+
+        public void SetPlantLevel(float level)
+        {
+            activePlantLevel = (int)level;
         }
 
         public void RefreshEntireGrid()

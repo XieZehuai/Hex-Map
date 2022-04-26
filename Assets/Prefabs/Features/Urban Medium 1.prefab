@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3982165262868776599}
   - component: {fileID: 7647948646219586288}
   m_Layer: 0
-  m_Name: Urban 2
+  m_Name: Urban Medium 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,7 +57,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a8f3768857e98874391211c42217b384, type: 2}
+  - {fileID: 2100000, guid: dfc9c77f4b8c7544fbbcb6ca3bc5d002, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

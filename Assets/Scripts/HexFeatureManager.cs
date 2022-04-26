@@ -12,6 +12,8 @@ namespace HexMap
     public class HexFeatureManager : MonoBehaviour
     {
         [SerializeField] private HexFeatureCollection[] urbanCollections = default;
+        [SerializeField] private HexFeatureCollection[] farmCollections = default;
+        [SerializeField] private HexFeatureCollection[] plantCollections = default;
 
         private Transform container;
 
@@ -35,17 +37,49 @@ namespace HexMap
         {
             HexHash hash = HexMetrics.SampleHashGrid(position);
 
-            Transform prefab = PickPrefab(cell.UrbanLevel, hash.a, hash.b);
-            if (prefab == null) return;
+            Transform prefab = PickPrefab(urbanCollections, cell.UrbanLevel, hash.a, hash.d);
+            Transform otherPrefab = PickPrefab(farmCollections, cell.FarmLevel, hash.b, hash.d);
+            float usedHash = hash.a;
+
+            if (prefab != null)
+            {
+                if (otherPrefab != null && hash.b < hash.a)
+                {
+                    prefab = otherPrefab;
+                    usedHash = hash.b;
+                }
+            }
+            else if (otherPrefab != null)
+            {
+                prefab = otherPrefab;
+                usedHash = hash.b;
+            }
+
+            otherPrefab = PickPrefab(plantCollections, cell.PlantLevel, hash.c, hash.d);
+            if (prefab != null)
+            {
+                if (otherPrefab != null && hash.c < usedHash)
+                {
+                    prefab = otherPrefab;
+                }
+            }
+            else if (otherPrefab != null)
+            {
+                prefab = otherPrefab;
+            }
+            else
+            {
+                return;
+            }
 
             Transform instance = Instantiate(prefab, container);
 
             position.y += instance.localScale.y * 0.5f;
             instance.localPosition = HexMetrics.Perturb(position);
-            instance.localRotation = Quaternion.Euler(0f, hash.c * 360f, 0f);
+            instance.localRotation = Quaternion.Euler(0f, hash.e * 360f, 0f);
         }
 
-        private Transform PickPrefab(int level, float hash, float choice)
+        private Transform PickPrefab(HexFeatureCollection[] collection, int level, float hash, float choice)
         {
             if (level > 0)
             {
@@ -55,7 +89,7 @@ namespace HexMap
                 {
                     if (hash < thresholds[i])
                     {
-                        return urbanCollections[i].Pick(choice);
+                        return collection[i].Pick(choice);
                     }
                 }
             }

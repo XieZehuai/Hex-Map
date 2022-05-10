@@ -23,6 +23,7 @@ namespace HexMap.Editor
 
         private OptionalToggle riverMode; // 河流的编辑模式
         private OptionalToggle roadMode; // 道路的编辑模式
+        private OptionalToggle walledMode; // 墙壁的编辑模式
         #endregion
 
         #region 单元格细节编辑选项
@@ -170,6 +171,10 @@ namespace HexMap.Editor
             {
                 cell.RemoveRoads();
             }
+            if (walledMode != OptionalToggle.Ignore)
+            {
+                cell.Walled = walledMode == OptionalToggle.Yes;
+            }
 
             if (isDrag)
             {
@@ -266,6 +271,11 @@ namespace HexMap.Editor
         public void SetApplyPlantLevel(bool toggle)
         {
             applyPlantLevel = toggle;
+        }
+
+        public void SetWalledMode(int mode)
+        {
+            walledMode = (OptionalToggle)mode;
         }
 
         public void SetPlantLevel(float level)

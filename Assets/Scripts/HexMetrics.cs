@@ -75,6 +75,15 @@ namespace HexMap
         public const float verticalTerraceStepSize = 1f / (terracesPerSlope + 1);
 
         /// <summary>
+        /// 墙壁高度
+        /// </summary>
+        public const float wallHeight = 3f;
+        /// <summary>
+        /// 墙壁厚度
+        /// </summary>
+        public const float wallThickness = 0.75f;
+
+        /// <summary>
         /// 噪声图，用该图产生噪声
         /// </summary>
         public static Texture2D noiseSource;
@@ -250,6 +259,15 @@ namespace HexMap
         public static float[] GetFeatureThresholds(int level)
         {
             return featureThresholds[level];
+        }
+
+        public static Vector3 WallThicknessOffset(Vector3 near, Vector3 far)
+        {
+            Vector3 offset;
+            offset.x = far.x - near.x;
+            offset.y = 0f;
+            offset.z = far.z - near.z;
+            return offset.normalized * (wallThickness * 0.5f);
         }
     }
 }

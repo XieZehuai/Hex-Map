@@ -525,6 +525,9 @@ namespace HexMap
                 TriangulateEdgeStrip(e1, cell.Color, e2, neighbor.Color, cell.HasRoadThroughEdge(direction));
             }
 
+            // 在当前的边上添加墙壁，是否真的生成墙壁由 HexFeatureManager 决定
+            features.AddWall(e1, cell, e2, neighbor);
+
             // 生成当前单元格、相邻单元格、下一方向相邻单元格，之间的三角形连接部分，并且一个单元格
             // 有三个矩形连接，但只有两个三角形连接
             if (direction <= HexDirection.E)
@@ -843,6 +846,8 @@ namespace HexMap
                 terrain.AddTriangle(bottom, left, right);
                 terrain.AddTriangleColor(bottomCell.Color, leftCell.Color, rightCell.Color);
             }
+
+            features.AddWall(bottom, bottomCell, left, leftCell, right, rightCell);
         }
 
         private void TriangulateCornerTerraces(Vector3 begin, HexCell beginCell,

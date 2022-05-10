@@ -147,6 +147,26 @@ namespace HexMap
         public float WaterSurfaceY => (waterLevel + HexMetrics.waterElevationOffset) * HexMetrics.elevationStep;
         #endregion
 
+        #region 墙壁相关属性
+        private bool walled;
+
+        /// <summary>
+        /// 单元格是否被墙壁包围。墙壁处于单元格与单元格之间的连接部分，不处于单元格内，且包围整个单元格。
+        /// </summary>
+        public bool Walled
+        {
+            get => walled;
+            set
+            {
+                if (walled != value)
+                {
+                    walled = value;
+                    Refresh();
+                }
+            }
+        }
+        #endregion
+
         #region 与相邻单元格有关的方法
         /// <summary>
         /// 获取目标方向上的邻居，如果没有则返回 null

@@ -82,6 +82,7 @@ namespace HexMap
         /// 墙壁厚度
         /// </summary>
         public const float wallThickness = 0.75f;
+        public const float wallElevationOffset = verticalTerraceStepSize;
 
         /// <summary>
         /// 噪声图，用该图产生噪声
@@ -268,6 +269,15 @@ namespace HexMap
             offset.y = 0f;
             offset.z = far.z - near.z;
             return offset.normalized * (wallThickness * 0.5f);
+        }
+
+        public static Vector3 WallLerp(Vector3 near, Vector3 far)
+        {
+            near.x += (far.x - near.x) * 0.5f;
+            near.z += (far.z - near.z) * 0.5f;
+            float v = near.y < far.y ? wallElevationOffset : (1f - wallElevationOffset);
+            near.y += (far.y - near.y) * v;
+            return near;
         }
     }
 }

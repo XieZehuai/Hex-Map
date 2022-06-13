@@ -489,7 +489,10 @@ namespace HexMap
             bridge.y = neighbor.Position.y - cell.Position.y;
             EdgeVertices e2 = new EdgeVertices(e1.v1 + bridge, e1.v5 + bridge);
 
-            if (neighbor.HasRiverThroughEdge(direction.Opposite()))
+            bool hasRiver = cell.HasRiverThroughEdge(direction);
+            bool hasRoad = cell.HasRoadThroughEdge(direction);
+
+            if (hasRiver)
             {
                 e2.v3.y = neighbor.StreamBedY;
 
@@ -518,15 +521,15 @@ namespace HexMap
             // 判断单元格与相邻单元格之间的连接类型
             if (cell.GetEdgeType(direction) == HexEdgeType.Slope)
             {
-                TriangulateEdgeTerraces(e1, cell, e2, neighbor, cell.HasRoadThroughEdge(direction));
+                TriangulateEdgeTerraces(e1, cell, e2, neighbor, hasRoad);
             }
             else
             {
-                TriangulateEdgeStrip(e1, cell.Color, e2, neighbor.Color, cell.HasRoadThroughEdge(direction));
+                TriangulateEdgeStrip(e1, cell.Color, e2, neighbor.Color, hasRoad);
             }
 
             // 在当前的边上添加墙壁，是否真的生成墙壁由 HexFeatureManager 决定
-            features.AddWall(e1, cell, e2, neighbor);
+            features.AddWall(e1, cell, e2, neighbor, hasRiver, hasRoad);
 
             // 生成当前单元格、相邻单元格、下一方向相邻单元格，之间的三角形连接部分，并且一个单元格
             // 有三个矩形连接，但只有两个三角形连接

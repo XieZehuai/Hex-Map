@@ -100,10 +100,13 @@ namespace HexMap
             return null;
         }
 
+        /// <summary>
+        /// 在两个单元格间的连接处添加墙壁，如果可以添加的话
+        /// </summary>
         public void AddWall(EdgeVertices near, HexCell nearCell, EdgeVertices far, HexCell farCell, bool hasRiver, bool hasRoad)
         {
             // 两个相邻单元格之间一个有墙一个没墙时，在它们中间的连接处添加墙壁
-            if (nearCell.Walled != farCell.Walled)
+            if (CanAddWall(nearCell, farCell))
             {
                 AddWallSegment(near.v1, far.v1, near.v2, far.v2);
 
@@ -122,6 +125,19 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 判断在两个单元格之间是否可以添加墙壁
+        /// </summary>
+        private static bool CanAddWall(HexCell nearCell, HexCell farCell)
+        {
+            return nearCell.Walled != farCell.Walled &&
+                !nearCell.IsUnderWater && !farCell.IsUnderWater &&
+                nearCell.GetEdgeType(farCell) != HexEdgeType.Cliff;
+        }
+
+        /// <summary>
+        /// 在三个单元格之间的连接处添加墙壁，如果可以的话
+        /// </summary>
         public void AddWall(Vector3 c1, HexCell cell1, Vector3 c2, HexCell cell2, Vector3 c3, HexCell cell3)
         {
             if (cell1.Walled)
@@ -159,6 +175,48 @@ namespace HexMap
             }
         }
 
+        /// <summary>
+        /// 添加三角形的墙壁片段，用于连接三个单元格之间的墙壁
+        /// </summary>
+        private void AddWallSegment(Vector3 pivot, HexCell pivotCell, Vector3 left, HexCell leftCell,
+            Vector3 right, HexCell rightCell)
+        {
+            if (pivotCell.IsUnderWater) return;
+
+            bool hasLeftWall = !leftCell.IsUnderWater && pivotCell.GetEdgeType(leftCell) != HexEdgeType.Cliff;
+            bool hasRightWall = !rightCell.IsUnderWater && pivotCell.GetEdgeType(rightCell) != HexEdgeType.Cliff;
+
+            if (hasLeftWall)
+            {
+                if (hasRightWall)
+                {
+                    AddWallSegment(pivot, left, pivot, right);
+                }
+                else if (leftCell.Elevation < rightCell.Elevation)
+                {
+                    AddWallWedge(pivot, left, right);
+                }
+                else
+                {
+                    AddWallCap(pivot, left);
+                }
+            }
+            else if (hasRightWall)
+            {
+                if (rightCell.Elevation < leftCell.Elevation)
+                {
+                    AddWallWedge(right, pivot, left);
+                }
+                else
+                {
+                    AddWallCap(right, pivot);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 添加四边形的墙壁片段，用于连接两个单元格之间的墙壁
+        /// </summary>
         private void AddWallSegment(Vector3 nearLeft, Vector3 farLeft, Vector3 nearRight, Vector3 farRight)
         {
             nearLeft = HexMetrics.Perturb(nearLeft);
@@ -193,12 +251,6 @@ namespace HexMap
             walls.AddQuadUnperturbed(t1, t2, v3, v4);
         }
 
-        private void AddWallSegment(Vector3 pivot, HexCell pivotCell, Vector3 left, HexCell leftCell,
-            Vector3 right, HexCell rightCell)
-        {
-            AddWallSegment(pivot, left, pivot, right);
-        }
-
         private void AddWallCap(Vector3 near, Vector3 far)
         {
             near = HexMetrics.Perturb(near);
@@ -213,6 +265,28 @@ namespace HexMap
             v2 = v4 = center + thickness;
             v3.y = v4.y = center.y + HexMetrics.wallHeight;
             walls.AddQuadUnperturbed(v1, v2, v3, v4);
+        }
+
+        private void AddWallWedge(Vector3 near, Vector3 far, Vector3 point)
+        {
+            near = HexMetrics.Perturb(near);
+            far = HexMetrics.Perturb(far);
+            point = HexMetrics.Perturb(point);
+
+            Vector3 center = HexMetrics.WallLerp(near, far);
+            Vector3 thickness = HexMetrics.WallThicknessOffset(near, far);
+
+            Vector3 v1, v2, v3, v4;
+            Vector3 pointTop = point;
+            point.y = center.y;
+
+            v1 = v3 = center - thickness;
+            v2 = v4 = center + thickness;
+            v3.y = v4.y = pointTop.y = center.y + HexMetrics.wallHeight;
+
+            walls.AddQuadUnperturbed(v1, point, v3, pointTop);
+            walls.AddQuadUnperturbed(point, v2, pointTop, v4);
+            walls.AddTriangleUnperturbed(pointTop, v3, v4);
         }
     }
 }

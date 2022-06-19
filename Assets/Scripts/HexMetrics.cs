@@ -80,6 +80,8 @@ namespace HexMap
         public const float wallElevationOffset = verticalTerraceStepSize;
         public const float wallTowerThreshold = 0.5f;
 
+        public const float bridgeDesignLength = 7f;
+
         /// <summary>
         /// 噪声图，用该图产生噪声
         /// </summary>

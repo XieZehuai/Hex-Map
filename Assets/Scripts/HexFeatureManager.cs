@@ -16,6 +16,7 @@ namespace HexMap
         [SerializeField] private HexFeatureCollection[] plantCollections = default;
         [SerializeField] private HexMesh walls = default;
         [SerializeField] private Transform wallTower = default;
+        [SerializeField] private Transform bridge = default;
 
         private Transform container;
 
@@ -313,6 +314,22 @@ namespace HexMap
             walls.AddQuadUnperturbed(v1, point, v3, pointTop);
             walls.AddQuadUnperturbed(point, v2, pointTop, v4);
             walls.AddTriangleUnperturbed(pointTop, v3, v4);
+        }
+
+        /// <summary>
+        /// 在被河流分开的道路中间添加桥梁
+        /// </summary>
+        public void AddBridge(Vector3 roadCenter1, Vector3 roadCenter2)
+        {
+            roadCenter1 = HexMetrics.Perturb(roadCenter1);
+            roadCenter2 = HexMetrics.Perturb(roadCenter2);
+
+            Transform instance = Instantiate(bridge, container);
+            instance.localPosition = (roadCenter1 + roadCenter2) * 0.5f;
+            instance.forward = roadCenter2 - roadCenter1;
+
+            float length = Vector3.Distance(roadCenter1, roadCenter2);
+            instance.localScale = new Vector3(1f, 1f, length * (1f / HexMetrics.bridgeDesignLength));
         }
     }
 }

@@ -258,7 +258,7 @@ namespace HexMap
         {
             if (cell.HasRoads)
             {
-                TriangulateRoadAdjacentRiver(direction, cell, center, e);
+                TriangulateRoadAdjacentToRiver(direction, cell, center, e);
             }
 
             // 虽然没有河流，但河流会影响单元格的中心点，所以需要重新计算中心点
@@ -663,7 +663,7 @@ namespace HexMap
         /// <summary>
         /// 当单元格内有河流时，河流会影响单元格的终点，甚至截断道路，所以需要针对单元格有河流的情况做处理
         /// </summary>
-        private void TriangulateRoadAdjacentRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
+        private void TriangulateRoadAdjacentToRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
         {
             bool hasRoad = cell.HasRoadThroughEdge(direction); // 当前方向上是否有道路
             // 与当前方向相邻的两个方向上是否有河流，以此判断道路是否与河流相邻
@@ -699,6 +699,9 @@ namespace HexMap
                 }
 
                 roadCenter += corner * 0.5f;
+
+                AddBridgeCrossStraightRiver(direction, cell, center, roadCenter, corner);
+
                 center += corner * 0.25f;
             }
             else if (cell.IncomingRiver == cell.OutgoingRiver.Previous()) // 河流大角度转弯，也就是说不存在道路被截断的情况
@@ -735,9 +738,20 @@ namespace HexMap
 
                 if (!cell.HasRoadThroughEdge(middle) &&
                     !cell.HasRoadThroughEdge(middle.Previous()) &&
-                    !cell.HasRoadThroughEdge(middle.Next())) return;
+                    !cell.HasRoadThroughEdge(middle.Next())
+                )
+                {
+                    return;
+                }
 
-                roadCenter += HexMetrics.GetSolidEdgeMiddle(middle) * 0.25f;
+                Vector3 offset = HexMetrics.GetSolidEdgeMiddle(middle);
+                roadCenter += offset * 0.25f;
+
+                if (direction == middle &&
+                    cell.HasRoadThroughEdge(direction.Opposite()))
+                {
+                    AddBridgeCrossCurvingRiver(center, roadCenter, offset);
+                }
             }
 
             Vector3 mL = Vector3.Lerp(roadCenter, e.v1, interpolators.x);
@@ -752,6 +766,22 @@ namespace HexMap
             {
                 TriangulateRoadEdge(roadCenter, mR, center);
             }
+        }
+
+        private void AddBridgeCrossStraightRiver(HexDirection direction, HexCell cell, Vector3 center, Vector3 roadCenter, Vector3 corner)
+        {
+            if (cell.IncomingRiver == direction.Next() && (
+                cell.HasRoadThroughEdge(direction.Next2()) ||
+                cell.HasRoadThroughEdge(direction.Opposite())
+            ))
+            {
+                features.AddBridge(roadCenter, center - corner * 0.5f);
+            }
+        }
+
+        private void AddBridgeCrossCurvingRiver(Vector3 center, Vector3 roadCenter, Vector3 offset)
+        {
+            features.AddBridge(roadCenter, center - offset * (HexMetrics.innerToOuter * 0.7f));
         }
 
         /// <summary>

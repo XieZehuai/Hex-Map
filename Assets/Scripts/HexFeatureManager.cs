@@ -15,6 +15,7 @@ namespace HexMap
         [SerializeField] private HexFeatureCollection[] farmCollections = default;
         [SerializeField] private HexFeatureCollection[] plantCollections = default;
         [SerializeField] private HexMesh walls = default;
+        [SerializeField] private Transform wallTower = default;
 
         private Transform container;
 
@@ -190,7 +191,14 @@ namespace HexMap
             {
                 if (hasRightWall)
                 {
-                    AddWallSegment(pivot, left, pivot, right);
+                    bool hasTower = false;
+                    if (leftCell.Elevation == rightCell.Elevation)
+                    {
+                        HexHash hash = HexMetrics.SampleHashGrid((pivot + left + right) * (1f / 3f));
+                        hasTower = hash.e < HexMetrics.wallTowerThreshold;
+                    }
+
+                    AddWallSegment(pivot, left, pivot, right, hasTower);
                 }
                 else if (leftCell.Elevation < rightCell.Elevation)
                 {
@@ -217,7 +225,8 @@ namespace HexMap
         /// <summary>
         /// 添加四边形的墙壁片段，用于连接两个单元格之间的墙壁
         /// </summary>
-        private void AddWallSegment(Vector3 nearLeft, Vector3 farLeft, Vector3 nearRight, Vector3 farRight)
+        private void AddWallSegment(Vector3 nearLeft, Vector3 farLeft, Vector3 nearRight, Vector3 farRight,
+            bool addTower = false)
         {
             nearLeft = HexMetrics.Perturb(nearLeft);
             farLeft = HexMetrics.Perturb(farLeft);
@@ -249,6 +258,23 @@ namespace HexMap
             walls.AddQuadUnperturbed(v2, v1, v4, v3);
 
             walls.AddQuadUnperturbed(t1, t2, v3, v4);
+
+            if (addTower)
+            {
+                AddWallTower(left, right);
+            }
+        }
+
+        /// <summary>
+        /// 在墙壁之间添加塔楼（类似长城）
+        /// </summary>
+        private void AddWallTower(Vector3 left, Vector3 right)
+        {
+            Transform tower = Instantiate(wallTower, container);
+            tower.transform.localPosition = (left + right) * 0.5f;
+            Vector3 rightDirection = right - left;
+            rightDirection.y = 0f;
+            tower.transform.right = rightDirection;
         }
 
         private void AddWallCap(Vector3 near, Vector3 far)

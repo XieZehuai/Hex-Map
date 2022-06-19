@@ -74,15 +74,11 @@ namespace HexMap
         public const float horizontalTerraceStepSize = 1f / terraceSteps;
         public const float verticalTerraceStepSize = 1f / (terracesPerSlope + 1);
 
-        /// <summary>
-        /// 墙壁高度
-        /// </summary>
-        public const float wallHeight = 3f;
-        /// <summary>
-        /// 墙壁厚度
-        /// </summary>
-        public const float wallThickness = 0.75f;
+        public const float wallHeight = 4f; // 墙壁的高度
+        public const float wallYOffset = -1f; // 让墙壁往下移，避免墙壁不贴合地面
+        public const float wallThickness = 0.75f; // 墙壁的厚度
         public const float wallElevationOffset = verticalTerraceStepSize;
+        public const float wallTowerThreshold = 0.5f;
 
         /// <summary>
         /// 噪声图，用该图产生噪声
@@ -276,7 +272,8 @@ namespace HexMap
             near.x += (far.x - near.x) * 0.5f;
             near.z += (far.z - near.z) * 0.5f;
             float v = near.y < far.y ? wallElevationOffset : (1f - wallElevationOffset);
-            near.y += (far.y - near.y) * v;
+            near.y += (far.y - near.y) * v + wallYOffset;
+
             return near;
         }
     }

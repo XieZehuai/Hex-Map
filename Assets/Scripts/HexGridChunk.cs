@@ -99,10 +99,17 @@ namespace HexMap
                 Triangulate(direction, cell);
             }
 
-            // 在单元格中心添加细节
-            if (!cell.HasRoads && !cell.HasRiver && !cell.IsUnderWater)
+            if (!cell.IsUnderWater)
             {
-                features.AddFeature(cell, cell.Position);
+                // 在单元格中心添加细节
+                if (!cell.HasRoads && !cell.HasRiver)
+                {
+                    features.AddFeature(cell, cell.Position);
+                }
+                if (cell.IsSpecial)
+                {
+                    features.AddSpecialFeature(cell, cell.Position);
+                }
             }
         }
 

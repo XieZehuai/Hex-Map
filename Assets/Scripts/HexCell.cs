@@ -263,11 +263,13 @@ namespace HexMap
 
             hasOutgoingRiver = true;
             outgoingRiver = direction;
+            specialIndex = 0;
 
             // 对应方向上的相邻单元格也需要添加一条流入的河流
             neighbor.RemoveIncomingRiver();
             neighbor.hasIncomingRiver = true;
             neighbor.incomingRiver = direction.Opposite();
+            neighbor.specialIndex = 0;
 
             // 道路无法覆盖河流，但河流可以覆盖道路，所以设置河流后把当前方向上的道路移除
             SetRoad((int)direction, false);
@@ -350,6 +352,7 @@ namespace HexMap
             // 在同一个方向上，无法同时存在道路以及河流，所以要判断当前方向上是否有河流；
             // 如果与目标方向上的单元格之间海拔差太大，也不能设置道路
             if (!roads[(int)direction] && !HasRiverThroughEdge(direction) &&
+                !IsSpecial && !GetNeighbor(direction).IsSpecial &&
                 GetElevationDifference(direction) <= 1)
             {
                 SetRoad((int)direction, true);
@@ -436,14 +439,15 @@ namespace HexMap
             get => specialIndex;
             set
             {
-                if (specialIndex != value)
+                if (specialIndex != value && !HasRiver)
                 {
                     specialIndex = value;
+                    RemoveRoads();
                     RefreshSelfOnly();
                 }
             }
         }
-        
+
         public bool IsSpecial => specialIndex > 0;
         #endregion
 

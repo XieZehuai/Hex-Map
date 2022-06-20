@@ -387,6 +387,7 @@ namespace HexMap
         private int urbanLevel;
         private int farmLevel;
         private int plantLevel;
+        private int specialIndex;
 
         /// <summary>
         /// 单元格的城市化水平，控制单元格内的建筑数量，0为最低水平，也就是没有任何建筑
@@ -429,6 +430,21 @@ namespace HexMap
                 }
             }
         }
+
+        public int SpecialIndex
+        {
+            get => specialIndex;
+            set
+            {
+                if (specialIndex != value)
+                {
+                    specialIndex = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+        
+        public bool IsSpecial => specialIndex > 0;
         #endregion
 
         /// <summary>

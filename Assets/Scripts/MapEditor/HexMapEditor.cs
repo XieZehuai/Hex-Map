@@ -35,6 +35,9 @@ namespace HexMap.Editor
 
         private bool applyPlantLevel;
         private int activePlantLevel;
+
+        private bool applySpecialIndex;
+        private int activeSpecialIndex;
         #endregion
 
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
@@ -162,6 +165,10 @@ namespace HexMap.Editor
             {
                 cell.PlantLevel = activePlantLevel;
             }
+            if (applySpecialIndex)
+            {
+                cell.SpecialIndex = activeSpecialIndex;
+            }
 
             if (riverMode == OptionalToggle.No)
             {
@@ -273,14 +280,24 @@ namespace HexMap.Editor
             applyPlantLevel = toggle;
         }
 
-        public void SetWalledMode(int mode)
-        {
-            walledMode = (OptionalToggle)mode;
-        }
-
         public void SetPlantLevel(float level)
         {
             activePlantLevel = (int)level;
+        }
+
+        public void SetApplySpecialIndex(bool toggle)
+        {
+            applySpecialIndex = toggle;
+        }
+
+        public void SetSepcialIndex(float index)
+        {
+            activeSpecialIndex = (int)index;
+        }
+
+        public void SetWalledMode(int mode)
+        {
+            walledMode = (OptionalToggle)mode;
         }
 
         public void RefreshEntireGrid()

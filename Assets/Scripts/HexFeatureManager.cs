@@ -17,6 +17,7 @@ namespace HexMap
         [SerializeField] private HexMesh walls = default;
         [SerializeField] private Transform wallTower = default;
         [SerializeField] private Transform bridge = default;
+        [SerializeField] private Transform[] special = default;
 
         private Transform container;
 

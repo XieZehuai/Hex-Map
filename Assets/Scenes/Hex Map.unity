@@ -721,7 +721,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87db43f6e5f5b3e4d932c2b173e9f8de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stickMinZoom: -250
+  stickMinZoom: -400
   stickMaxZoom: -35
   swivelMinZoom: 90
   swivelMaxZoom: 45

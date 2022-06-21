@@ -16,17 +16,29 @@ namespace HexMap
 
         #region 单元格基础属性
         private int elevation = int.MinValue;
-        private Color color;
+        private int terrainTypeIndex;
+
+        public int TerrainTypeIndex
+        {
+            get
+            {
+                return terrainTypeIndex;
+            }
+            set
+            {
+                if (terrainTypeIndex != value)
+                {
+                    terrainTypeIndex = value;
+                    Refresh();
+                }
+            }
+        }
 
         public Color Color
         {
-            get => color;
-            set
+            get
             {
-                if (color == value) return;
-
-                color = value;
-                Refresh();
+                return HexMetrics.colors[terrainTypeIndex];
             }
         }
 

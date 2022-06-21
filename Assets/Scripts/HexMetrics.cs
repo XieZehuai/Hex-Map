@@ -107,6 +107,8 @@ namespace HexMap
             new Vector3(0f, 0f, outerRadius),
         };
 
+        public static Color[] colors;
+
         #endregion
 
         /// <summary>

@@ -8,13 +8,10 @@ namespace HexMap.Editor
     /// </summary>
     public class HexMapEditor : MonoBehaviour
     {
-        public Color[] colors;
         public HexGrid hexGrid;
 
         #region 地形编辑选项
-        private bool applyColor;
-        private Color activeColor; // 当前选中的颜色
-
+        private int activeTerrainTypeIndex;
         private bool applyElevation;
         private int activeElevation; // 当前选中的海拔高度
 
@@ -47,11 +44,6 @@ namespace HexMap.Editor
         private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
         private HexDirection dragDirection;
         private HexCell previousCell;
-
-        private void Awake()
-        {
-            SelectColor(-1);
-        }
 
         private void Update()
         {
@@ -141,9 +133,9 @@ namespace HexMap.Editor
         {
             if (cell == null) return;
 
-            if (applyColor)
+            if (activeTerrainTypeIndex >= 0)
             {
-                cell.Color = activeColor;
+                cell.TerrainTypeIndex = activeTerrainTypeIndex;
             }
             if (applyElevation)
             {
@@ -200,16 +192,9 @@ namespace HexMap.Editor
             }
         }
 
-        /// <summary>
-        /// 设置当前选中的颜色
-        /// </summary>
-        public void SelectColor(int index)
+        public void SetTerrainTypeIndex(int index)
         {
-            applyColor = index >= 0;
-            if (applyColor)
-            {
-                activeColor = colors[index];
-            }
+            activeTerrainTypeIndex = index;
         }
 
         public void SetApplyElevation(bool toggle)

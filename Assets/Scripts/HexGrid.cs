@@ -13,9 +13,9 @@ namespace HexMap
         [SerializeField] private HexCell cellPrefab = default;
         [SerializeField] private Text cellLabelPrefab = default;
         [SerializeField] private HexGridChunk chunkPrefab = default;
-        [SerializeField] private Color defaultColor = Color.white; // 单元格的默认颜色
         [SerializeField] private Texture2D noiseSource = default;
         [SerializeField] private int seed = 1234;
+        [SerializeField] private Color[] colors = default;
 
         private int cellCountX;
         private int cellCountZ;
@@ -29,6 +29,7 @@ namespace HexMap
         {
             HexMetrics.noiseSource = noiseSource;
             HexMetrics.InitializeHashGrid(seed);
+            HexMetrics.colors = colors;
 
             cellCountX = chunkCountX * HexMetrics.chunkSizeX;
             cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ;
@@ -43,6 +44,7 @@ namespace HexMap
             {
                 HexMetrics.noiseSource = noiseSource;
                 HexMetrics.InitializeHashGrid(seed);
+                HexMetrics.colors = colors;
             }
         }
 
@@ -97,7 +99,6 @@ namespace HexMap
             HexCell cell = cells[i] = Instantiate(cellPrefab);
             cell.transform.localPosition = position;
             cell.coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
-            cell.Color = defaultColor;
             cell.name = "Hex Cell " + cell.coordinates.ToString();
 
             // 设置单元格对应的邻居关系

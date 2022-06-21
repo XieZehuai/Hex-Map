@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace HexMap
@@ -186,6 +187,26 @@ namespace HexMap
             foreach (var chunk in chunks)
             {
                 chunk.Refresh();
+            }
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Save(writer);
+            }
+        }
+
+        public void Load(BinaryReader reader)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Load(reader);
+            }
+            for (int i = 0; i < chunks.Length; i++)
+            {
+                chunks[i].Refresh();
             }
         }
     }

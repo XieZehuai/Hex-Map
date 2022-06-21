@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.IO;
 using UnityEngine;
 
 namespace HexMap
@@ -50,18 +51,7 @@ namespace HexMap
                 if (elevation == value) return;
 
                 elevation = value;
-
-                /*
-                 * 根据海拔扰动强度，修改单元格和 UI 的实际高度
-                 */
-                Vector3 position = transform.localPosition;
-                position.y = elevation * HexMetrics.elevationStep;
-                position.y += (HexMetrics.SampleNoise(position).y * 2f - 1f) * HexMetrics.elevationPerturbStrength;
-                transform.localPosition = position;
-
-                Vector3 uiPosition = uiRect.localPosition;
-                uiPosition.z = -position.y;
-                uiRect.localPosition = uiPosition;
+                RefreshPosition();
 
                 /*
                  * 因为河流无法向高处流，所以修改海拔后要判断河流是否合法
@@ -81,6 +71,21 @@ namespace HexMap
 
                 Refresh();
             }
+        }
+
+        private void RefreshPosition()
+        {
+            /*
+            * 根据海拔扰动强度，修改单元格和 UI 的实际高度
+            */
+            Vector3 position = transform.localPosition;
+            position.y = elevation * HexMetrics.elevationStep;
+            position.y += (HexMetrics.SampleNoise(position).y * 2f - 1f) * HexMetrics.elevationPerturbStrength;
+            transform.localPosition = position;
+
+            Vector3 uiPosition = uiRect.localPosition;
+            uiPosition.z = -position.y;
+            uiRect.localPosition = uiPosition;
         }
 
         public Vector3 Position => transform.localPosition;
@@ -488,6 +493,52 @@ namespace HexMap
         private void RefreshSelfOnly()
         {
             chunk.Refresh();
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+            writer.Write(terrainTypeIndex);
+            writer.Write(elevation);
+            writer.Write(waterLevel);
+            writer.Write(urbanLevel);
+            writer.Write(farmLevel);
+            writer.Write(plantLevel);
+            writer.Write(specialIndex);
+            writer.Write(walled);
+
+            writer.Write(hasIncomingRiver);
+            writer.Write((int)incomingRiver);
+            writer.Write(hasOutgoingRiver);
+            writer.Write((int)outgoingRiver);
+
+            for (int i = 0; i < roads.Length; i++)
+            {
+                writer.Write(roads[i]);
+            }
+        }
+
+        public void Load(BinaryReader reader)
+        {
+            terrainTypeIndex = reader.ReadInt32();
+            elevation = reader.ReadInt32();
+            waterLevel = reader.ReadInt32();
+            urbanLevel = reader.ReadInt32();
+            farmLevel = reader.ReadInt32();
+            plantLevel = reader.ReadInt32();
+            specialIndex = reader.ReadInt32();
+            walled = reader.ReadBoolean();
+
+            hasIncomingRiver = reader.ReadBoolean();
+            incomingRiver = (HexDirection)reader.ReadInt32();
+            hasOutgoingRiver = reader.ReadBoolean();
+            outgoingRiver = (HexDirection)reader.ReadInt32();
+
+            for (int i = 0; i < roads.Length; i++)
+            {
+                roads[i] = reader.ReadBoolean();
+            }
+
+            RefreshPosition();
         }
     }
 }

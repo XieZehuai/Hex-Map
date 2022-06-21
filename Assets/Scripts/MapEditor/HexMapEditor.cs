@@ -297,7 +297,7 @@ namespace HexMap.Editor
             
             using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
             {
-                writer.Write(123);
+                hexGrid.Save(writer);
             }
         }
 
@@ -307,7 +307,7 @@ namespace HexMap.Editor
 
             using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
             {
-                Debug.Log(reader.ReadInt32());
+                hexGrid.Load(reader);
             }
         }
     }

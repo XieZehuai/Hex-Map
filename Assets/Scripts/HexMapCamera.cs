@@ -7,6 +7,8 @@ namespace HexMap
     /// </summary>
     public class HexMapCamera : MonoBehaviour
     {
+        public static HexMapCamera Instance { get; private set; }
+
         [SerializeField] private float stickMinZoom = -250f; // 最小缩放值
         [SerializeField] private float stickMaxZoom = -45f; // 最大缩放值
         [SerializeField] private float swivelMinZoom = 90f; // 在最小缩放值下摄像机的旋转角度
@@ -19,13 +21,25 @@ namespace HexMap
 
         private Transform swivel; // 控制摄像机的旋转
         private Transform stick; // 控制摄像机的距离
-
-        /// <summary>
-        /// 缩放值，取值范围[0 - 1]，0 表示最远，1 表示最近
-        /// </summary>
-        private float zoom = 1f;
+        private float zoom = 1f; // 缩放值，取值范围[0 - 1]，0 表示最远，1 表示最近
+        private bool isLocked;
 
         private float rotationAngle;
+
+        public void Lock()
+        {
+            isLocked = true;
+        }
+
+        public void Unlock()
+        {
+            isLocked = false;
+        }
+
+        public void ValidatePosition()
+        {
+            AdjustPosition(0f, 0f);
+        }
 
         private void Awake()
         {
@@ -33,8 +47,15 @@ namespace HexMap
             stick = swivel.GetChild(0);
         }
 
+        private void OnEnable()
+        {
+            Instance = this;
+        }
+
         private void Update()
         {
+            if (isLocked) return;
+
             float zoomDelta = Input.GetAxis("Mouse ScrollWheel");
             if (zoomDelta != 0f)
             {
@@ -99,10 +120,10 @@ namespace HexMap
         /// </summary>
         private Vector3 ClampPosition(Vector3 position)
         {
-            float xMax = (grid.ChunkCountX * HexMetrics.chunkSizeX - 0.5f) * (2f * HexMetrics.innerRadius);
+            float xMax = (grid.CellCountX - 0.5f) * (2f * HexMetrics.innerRadius);
             position.x = Mathf.Clamp(position.x, 0f, xMax);
 
-            float zMax = (grid.ChunkCountZ * HexMetrics.chunkSizeZ - 1f) * (1.5f * HexMetrics.outerRadius);
+            float zMax = (grid.CellCountZ - 1f) * (1.5f * HexMetrics.outerRadius);
             position.z = Mathf.Clamp(position.z, 0f, zMax);
 
             return position;

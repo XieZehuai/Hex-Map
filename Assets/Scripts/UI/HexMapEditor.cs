@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace HexMap.Editor
+namespace HexMap.UI
 {
     /// <summary>
     /// 六边形地图编辑器

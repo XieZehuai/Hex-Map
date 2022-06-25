@@ -9,8 +9,10 @@ namespace HexMap
     /// </summary>
     public class HexGrid : MonoBehaviour
     {
-        [SerializeField] private int chunkCountX = 4;
-        [SerializeField] private int chunkCountZ = 3;
+        [Tooltip("地图的宽度，大小必须是 HexMetrics.chunkSizeX（目前是 5）的倍数")]
+        [SerializeField] private int cellCountX = 20;
+        [Tooltip("地图的高度，大小必须是 HexMetrics.chunkSizeZ（目前是 5）的倍数")]
+        [SerializeField] private int cellCountZ = 15;
         [SerializeField] private HexCell cellPrefab = default;
         [SerializeField] private Text cellLabelPrefab = default;
         [SerializeField] private HexGridChunk chunkPrefab = default;
@@ -18,13 +20,13 @@ namespace HexMap
         [SerializeField] private int seed = 1234;
         [SerializeField] private Color[] colors = default;
 
-        private int cellCountX;
-        private int cellCountZ;
+        private int chunkCountX;
+        private int chunkCountZ;
         private HexCell[] cells;
         private HexGridChunk[] chunks;
 
-        public int ChunkCountX => chunkCountX;
-        public int ChunkCountZ => chunkCountZ;
+        public int CellCountX => cellCountZ;
+        public int CellCountZ => cellCountZ;
 
         private void Awake()
         {
@@ -32,11 +34,37 @@ namespace HexMap
             HexMetrics.InitializeHashGrid(seed);
             HexMetrics.colors = colors;
 
-            cellCountX = chunkCountX * HexMetrics.chunkSizeX;
-            cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ;
+            CreateMap(cellCountX, cellCountZ);
+        }
 
+        public void CreateMap(int x, int z)
+        {
+            if (x <= 0 || x % HexMetrics.chunkSizeX != 0 ||
+                z <= 0 || z % HexMetrics.chunkSizeZ != 0)
+            {
+                Debug.LogError("不支持的地图大小");
+                return;
+            }
+
+            ClearMap();
+
+            this.cellCountX = x;
+            this.cellCountZ = z;
+            chunkCountX = cellCountX / HexMetrics.chunkSizeX;
+            chunkCountZ = cellCountZ / HexMetrics.chunkSizeZ;
             CreateChunks();
             CreateCells();
+        }
+
+        private void ClearMap()
+        {
+            if (chunks != null)
+            {
+                for (int i = 0; i < chunks.Length; i++)
+                {
+                    Destroy(chunks[i].gameObject);
+                }
+            }
         }
 
         private void OnEnable()

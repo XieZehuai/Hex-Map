@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace HexMap.Editor
+namespace HexMap.UI
 {
     [CustomPropertyDrawer(typeof(HexCoordinates))]
     public class HexCoordinatesDrawer : PropertyDrawer

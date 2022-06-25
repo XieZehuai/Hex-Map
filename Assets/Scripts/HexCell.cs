@@ -17,7 +17,7 @@ namespace HexMap
 
         #region 单元格基础属性
         private int elevation = int.MinValue;
-        private int terrainTypeIndex;
+        private int terrainTypeIndex = 4;
 
         public int TerrainTypeIndex
         {

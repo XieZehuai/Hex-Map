@@ -37,23 +37,25 @@ namespace HexMap
             CreateMap(cellCountX, cellCountZ);
         }
 
-        public void CreateMap(int x, int z)
+        public bool CreateMap(int x, int z)
         {
             if (x <= 0 || x % HexMetrics.chunkSizeX != 0 ||
                 z <= 0 || z % HexMetrics.chunkSizeZ != 0)
             {
                 Debug.LogError("不支持的地图大小");
-                return;
+                return false;
             }
 
             ClearMap();
 
-            this.cellCountX = x;
-            this.cellCountZ = z;
+            cellCountX = x;
+            cellCountZ = z;
             chunkCountX = cellCountX / HexMetrics.chunkSizeX;
             chunkCountZ = cellCountZ / HexMetrics.chunkSizeZ;
             CreateChunks();
             CreateCells();
+
+            return true;
         }
 
         private void ClearMap()
@@ -155,7 +157,7 @@ namespace HexMap
                 }
             }
 
-            // 现实单元格坐标UI
+            // 显示单元格坐标UI
             Text label = Instantiate(cellLabelPrefab);
             label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
             label.text = cell.coordinates.ToStringOnSeparateLines();
@@ -220,14 +222,32 @@ namespace HexMap
 
         public void Save(BinaryWriter writer)
         {
+            writer.Write(cellCountX);
+            writer.Write(cellCountZ);
+
             for (int i = 0; i < cells.Length; i++)
             {
                 cells[i].Save(writer);
             }
         }
 
-        public void Load(BinaryReader reader)
+        public void Load(BinaryReader reader, int header)
         {
+            int x = 15, z = 15;
+            if (header >= 1)
+            {
+                x = reader.ReadInt32();
+                z = reader.ReadInt32();
+            }
+
+            if (x != cellCountX || z != cellCountZ)
+            {
+                if (!CreateMap(x, z))
+                {
+                    return;
+                }
+            }
+
             for (int i = 0; i < cells.Length; i++)
             {
                 cells[i].Load(reader);

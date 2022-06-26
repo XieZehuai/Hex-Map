@@ -2338,7 +2338,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Bl
+  m_text: 'Ye
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2407,9 +2409,9 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_textInfo:
     textComponent: {fileID: 193579870}
-    characterCount: 2
+    characterCount: 3
     spriteCount: 0
-    spaceCount: 0
+    spaceCount: 1
     wordCount: 1
     linkCount: 0
     lineCount: 1
@@ -2478,9 +2480,9 @@ MonoBehaviour:
   noiseSource: {fileID: 2800000, guid: 6fc0cde196e1ebd42b2e4cda4bf209aa, type: 3}
   seed: 1234
   colors:
-  - {r: 0, g: 0.16084719, b: 1, a: 1}
+  - {r: 1, g: 0.97857934, b: 0.08962262, a: 1}
   - {r: 0, g: 0.8679245, b: 0.08849436, a: 1}
-  - {r: 1, g: 0.9773821, b: 0, a: 1}
+  - {r: 0.1462264, g: 0.21441118, b: 1, a: 1}
   - {r: 1, g: 0.3993749, b: 0, a: 1}
   - {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &202894367
@@ -4803,7 +4805,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Ye
+  m_text: Bl
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9618,7 +9620,7 @@ GameObject:
   - component: {fileID: 1129886980}
   - component: {fileID: 1129886981}
   m_Layer: 5
-  m_Name: Toggle Yellow
+  m_Name: Toggle Blue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18802,7 +18804,7 @@ GameObject:
   - component: {fileID: 2144925901}
   - component: {fileID: 2144925902}
   m_Layer: 5
-  m_Name: Toggle Blue
+  m_Name: Toggle Yellow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

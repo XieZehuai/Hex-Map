@@ -178,8 +178,8 @@ namespace HexMap
             EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, e.v1, 0.5f), Vector3.Lerp(center, e.v5, 0.5f));
             m.v3.y = e.v3.y;
 
-            TriangulateEdgeStrip(m, color1, e, color1);
-            TriangulateEdgeFan(center, m, color1);
+            TriangulateEdgeStrip(m, color1, cell.TerrainTypeIndex, e, color1, cell.TerrainTypeIndex);
+            TriangulateEdgeFan(center, m, cell.TerrainTypeIndex);
 
             // 生成河流
             if (!cell.IsUnderWater)
@@ -242,7 +242,7 @@ namespace HexMap
             m.v3.y = center.y = e.v3.y;
 
             // 生成带有河流渠道的单元格三角形
-            TriangulateEdgeStrip(m, color1, e, color1);
+            TriangulateEdgeStrip(m, color1, cell.TerrainTypeIndex, e, color1, cell.TerrainTypeIndex);
 
             terrain.AddTriangle(centerL, m.v1, m.v2);
             terrain.AddQuad(centerL, center, m.v2, m.v3);
@@ -253,6 +253,12 @@ namespace HexMap
             terrain.AddQuadColor(color1);
             terrain.AddQuadColor(color1);
             terrain.AddTriangleColor(color1);
+
+            Vector3 types = new Vector3(cell.TerrainTypeIndex, cell.TerrainTypeIndex, cell.TerrainTypeIndex);
+            terrain.AddTriangleTerrainTypes(types);
+            terrain.AddQuadTerrainTypes(types);
+            terrain.AddQuadTerrainTypes(types);
+            terrain.AddTriangleTerrainTypes(types);
 
             // 只有河流没被水域覆盖时才生成
             if (!cell.IsUnderWater)
@@ -293,8 +299,8 @@ namespace HexMap
 
             EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, e.v1, 0.5f), Vector3.Lerp(center, e.v5, 0.5f));
 
-            TriangulateEdgeStrip(m, color1, e, color1);
-            TriangulateEdgeFan(center, m, color1);
+            TriangulateEdgeStrip(m, color1, cell.TerrainTypeIndex, e, color1, cell.TerrainTypeIndex);
+            TriangulateEdgeFan(center, m, cell.TerrainTypeIndex);
 
             if (!cell.IsUnderWater && !cell.HasRoadThroughEdge(direction))
             {
@@ -307,7 +313,7 @@ namespace HexMap
         /// </summary>
         private void TriangulateWithoutRiver(HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e)
         {
-            TriangulateEdgeFan(center, e, color1);
+            TriangulateEdgeFan(center, e, cell.TerrainTypeIndex);
 
             // 生成道路
             if (cell.HasRoads)
@@ -475,16 +481,23 @@ namespace HexMap
         /// 将单元格看成由六个三角形组成，这一步是生成其中的一个三角形
         /// </para>
         /// </summary>
-        private void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, Color color)
+        private void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, float terrainType)
         {
             terrain.AddTriangle(center, edge.v1, edge.v2);
-            terrain.AddTriangleColor(color);
             terrain.AddTriangle(center, edge.v2, edge.v3);
-            terrain.AddTriangleColor(color);
             terrain.AddTriangle(center, edge.v3, edge.v4);
-            terrain.AddTriangleColor(color);
             terrain.AddTriangle(center, edge.v4, edge.v5);
-            terrain.AddTriangleColor(color);
+
+            terrain.AddTriangleColor(color1);
+            terrain.AddTriangleColor(color1);
+            terrain.AddTriangleColor(color1);
+            terrain.AddTriangleColor(color1);
+
+            Vector3 types = new Vector3(terrainType, terrainType, terrainType);
+            terrain.AddTriangleTerrainTypes(types);
+            terrain.AddTriangleTerrainTypes(types);
+            terrain.AddTriangleTerrainTypes(types);
+            terrain.AddTriangleTerrainTypes(types);
         }
 
         /// <summary>
@@ -538,7 +551,7 @@ namespace HexMap
             }
             else
             {
-                TriangulateEdgeStrip(e1, color1, e2, color2, hasRoad);
+                TriangulateEdgeStrip(e1, color1, cell.TerrainTypeIndex, e2, color2, neighbor.TerrainTypeIndex, hasRoad);
             }
 
             // 在当前的边上添加墙壁，是否真的生成墙壁由 HexFeatureManager 决定
@@ -577,16 +590,24 @@ namespace HexMap
             }
         }
 
-        private void TriangulateEdgeStrip(EdgeVertices e1, Color c1, EdgeVertices e2, Color c2, bool hasRoad = false)
+        private void TriangulateEdgeStrip(EdgeVertices e1, Color c1, float type1,
+            EdgeVertices e2, Color c2, float type2, bool hasRoad = false)
         {
             terrain.AddQuad(e1.v1, e1.v2, e2.v1, e2.v2);
-            terrain.AddQuadColor(c1, c2);
             terrain.AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
-            terrain.AddQuadColor(c1, c2);
             terrain.AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
-            terrain.AddQuadColor(c1, c2);
             terrain.AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+
             terrain.AddQuadColor(c1, c2);
+            terrain.AddQuadColor(c1, c2);
+            terrain.AddQuadColor(c1, c2);
+            terrain.AddQuadColor(c1, c2);
+
+            Vector3 types = new Vector3(type1, type2, type1);
+            terrain.AddQuadTerrainTypes(types);
+            terrain.AddQuadTerrainTypes(types);
+            terrain.AddQuadTerrainTypes(types);
+            terrain.AddQuadTerrainTypes(types);
 
             if (hasRoad)
             {
@@ -602,8 +623,10 @@ namespace HexMap
         {
             EdgeVertices e2 = EdgeVertices.TerraceLerp(begin, end, 1);
             Color c2 = HexMetrics.TerraceLerp(color1, color2, 1);
+            float type1 = beginCell.TerrainTypeIndex;
+            float type2 = endCell.TerrainTypeIndex;
 
-            TriangulateEdgeStrip(begin, color1, e2, c2, hasRoad);
+            TriangulateEdgeStrip(begin, color1, type1, e2, c2, type2, hasRoad);
 
             for (int i = 2; i < HexMetrics.terraceSteps; i++)
             {
@@ -612,10 +635,10 @@ namespace HexMap
                 e2 = EdgeVertices.TerraceLerp(begin, end, i);
                 c2 = HexMetrics.TerraceLerp(color1, color2, i);
 
-                TriangulateEdgeStrip(e1, c1, e2, c2, hasRoad);
+                TriangulateEdgeStrip(e1, c1, type1, e2, c2, type2, hasRoad);
             }
 
-            TriangulateEdgeStrip(e2, c2, end, color2, hasRoad);
+            TriangulateEdgeStrip(e2, c2, type1, end, color2, type2, hasRoad);
         }
 
         /// <summary>
@@ -891,6 +914,9 @@ namespace HexMap
             {
                 terrain.AddTriangle(bottom, left, right);
                 terrain.AddTriangleColor(color1, color2, color3);
+
+                Vector3 types = new Vector3(bottomCell.TerrainTypeIndex, leftCell.TerrainTypeIndex, rightCell.TerrainTypeIndex);
+                terrain.AddTriangleTerrainTypes(types);
             }
 
             features.AddWall(bottom, bottomCell, left, leftCell, right, rightCell);
@@ -903,9 +929,11 @@ namespace HexMap
             Vector3 v4 = HexMetrics.TerraceLerp(begin, right, 1);
             Color c3 = HexMetrics.TerraceLerp(color1, color2, 1);
             Color c4 = HexMetrics.TerraceLerp(color1, color3, 1);
+            Vector3 types = new Vector3(beginCell.TerrainTypeIndex, leftCell.TerrainTypeIndex, rightCell.TerrainTypeIndex);
 
             terrain.AddTriangle(begin, v3, v4);
             terrain.AddTriangleColor(color1, c3, c4);
+            terrain.AddTriangleTerrainTypes(types);
 
             for (int i = 2; i < HexMetrics.terraceSteps; i++)
             {
@@ -919,10 +947,12 @@ namespace HexMap
 
                 terrain.AddQuad(v1, v2, v3, v4);
                 terrain.AddQuadColor(c1, c2, c3, c4);
+                terrain.AddQuadTerrainTypes(types);
             }
 
             terrain.AddQuad(v3, v4, left, right);
             terrain.AddQuadColor(c3, c4, color2, color3);
+            terrain.AddQuadTerrainTypes(types);
         }
 
         private void TriangulateCornerTerracesCliff(Vector3 begin, HexCell beginCell,
@@ -931,17 +961,19 @@ namespace HexMap
             float b = Mathf.Abs(1f / (rightCell.Elevation - beginCell.Elevation));
             Vector3 boundary = Vector3.Lerp(HexMetrics.Perturb(begin), HexMetrics.Perturb(right), b);
             Color boundaryColor = Color.Lerp(color1, color3, b);
+            Vector3 types = new Vector3(beginCell.TerrainTypeIndex, leftCell.TerrainTypeIndex, rightCell.TerrainTypeIndex);
 
-            TriangulateBoundaryTriangle(begin, color1, left, color2, boundary, boundaryColor);
+            TriangulateBoundaryTriangle(begin, color1, left, color2, boundary, boundaryColor, types);
 
             if (leftCell.GetEdgeType(rightCell) == HexEdgeType.Slope)
             {
-                TriangulateBoundaryTriangle(left, color2, right, color3, boundary, boundaryColor);
+                TriangulateBoundaryTriangle(left, color2, right, color3, boundary, boundaryColor, types);
             }
             else
             {
                 terrain.AddTriangleUnperturbed(HexMetrics.Perturb(left), HexMetrics.Perturb(right), boundary);
                 terrain.AddTriangleColor(color2, color3, boundaryColor);
+                terrain.AddTriangleTerrainTypes(types);
             }
         }
 
@@ -951,28 +983,31 @@ namespace HexMap
             float b = Mathf.Abs(1f / (leftCell.Elevation - beginCell.Elevation));
             Vector3 boundary = Vector3.Lerp(HexMetrics.Perturb(begin), HexMetrics.Perturb(left), b);
             Color boundaryColor = Color.Lerp(color1, color2, b);
+            Vector3 types = new Vector3(beginCell.TerrainTypeIndex, leftCell.TerrainTypeIndex, rightCell.TerrainTypeIndex);
 
-            TriangulateBoundaryTriangle(right, color3, begin, color1, boundary, boundaryColor);
+            TriangulateBoundaryTriangle(right, color3, begin, color1, boundary, boundaryColor, types);
 
             if (leftCell.GetEdgeType(rightCell) == HexEdgeType.Slope)
             {
-                TriangulateBoundaryTriangle(left, color2, right, color3, boundary, boundaryColor);
+                TriangulateBoundaryTriangle(left, color2, right, color3, boundary, boundaryColor, types);
             }
             else
             {
                 terrain.AddTriangleUnperturbed(HexMetrics.Perturb(left), HexMetrics.Perturb(right), boundary);
                 terrain.AddTriangleColor(color2, color3, boundaryColor);
+                terrain.AddTriangleTerrainTypes(types);
             }
         }
 
         private void TriangulateBoundaryTriangle(Vector3 begin, Color beginColor,
-            Vector3 left, Color leftColor, Vector3 boundary, Color boundaryColor)
+            Vector3 left, Color leftColor, Vector3 boundary, Color boundaryColor, Vector3 types)
         {
             Vector3 v2 = HexMetrics.Perturb(HexMetrics.TerraceLerp(begin, left, 1));
             Color c2 = HexMetrics.TerraceLerp(beginColor, leftColor, 1);
 
             terrain.AddTriangleUnperturbed(HexMetrics.Perturb(begin), v2, boundary);
             terrain.AddTriangleColor(beginColor, c2, boundaryColor);
+            terrain.AddTriangleTerrainTypes(types);
 
             for (int i = 2; i < HexMetrics.terraceSteps; i++)
             {
@@ -982,10 +1017,12 @@ namespace HexMap
                 c2 = HexMetrics.TerraceLerp(beginColor, leftColor, i);
                 terrain.AddTriangleUnperturbed(v1, v2, boundary);
                 terrain.AddTriangleColor(c1, c2, boundaryColor);
+                terrain.AddTriangleTerrainTypes(types);
             }
 
             terrain.AddTriangleUnperturbed(v2, HexMetrics.Perturb(left), boundary);
             terrain.AddTriangleColor(c2, leftColor, boundaryColor);
+            terrain.AddTriangleTerrainTypes(types);
         }
 
         private void TriangulateRiverQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,

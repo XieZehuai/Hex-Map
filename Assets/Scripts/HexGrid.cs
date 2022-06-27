@@ -18,21 +18,19 @@ namespace HexMap
         [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Texture2D noiseSource = default;
         [SerializeField] private int seed = 1234;
-        [SerializeField] private Color[] colors = default;
 
         private int chunkCountX;
         private int chunkCountZ;
         private HexCell[] cells;
         private HexGridChunk[] chunks;
 
-        public int CellCountX => cellCountZ;
+        public int CellCountX => cellCountX;
         public int CellCountZ => cellCountZ;
 
         private void Awake()
         {
             HexMetrics.noiseSource = noiseSource;
             HexMetrics.InitializeHashGrid(seed);
-            HexMetrics.colors = colors;
 
             CreateMap(cellCountX, cellCountZ);
         }
@@ -75,7 +73,6 @@ namespace HexMap
             {
                 HexMetrics.noiseSource = noiseSource;
                 HexMetrics.InitializeHashGrid(seed);
-                HexMetrics.colors = colors;
             }
         }
 

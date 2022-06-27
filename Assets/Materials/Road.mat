@@ -26,7 +26,7 @@ Material:
     m_Floats:
     - _Glossiness: 0.1
     - _Metallic: 0
-    - _RoadDissolve: 0.1
+    - _RoadDissolve: 0.2
     - _RoadSolid: 0.7
     m_Colors:
-    - _Color: {r: 0.764151, g: 0.609418, b: 0.21266466, a: 1}
+    - _Color: {r: 0.6320754, g: 0.2364517, b: 0.09242612, a: 1}

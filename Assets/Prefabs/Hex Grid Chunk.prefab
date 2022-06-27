@@ -94,6 +94,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 1
   useUV2: 1
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &1786109512543307464
 GameObject:
@@ -189,6 +190,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 1
   useUV2: 0
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &2615211349300457920
 GameObject:
@@ -365,6 +367,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 1
   useUV2: 0
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &4016652112472487728
 GameObject:
@@ -460,6 +463,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 0
   useUV2: 0
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &6700044407518005524
 GameObject:
@@ -555,6 +559,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 0
   useUV2: 0
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &7353180149395402583
 GameObject:
@@ -650,6 +655,7 @@ MonoBehaviour:
   useColor: 0
   useUV: 1
   useUV2: 0
+  useTerrainType: 0
   drawWireFrame: 0
 --- !u!1 &8266012465426326500
 GameObject:
@@ -884,4 +890,5 @@ MonoBehaviour:
   useColor: 1
   useUV: 0
   useUV2: 0
+  useTerrainType: 1
   drawWireFrame: 0

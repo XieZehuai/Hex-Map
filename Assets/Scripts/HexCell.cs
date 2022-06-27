@@ -35,14 +35,6 @@ namespace HexMap
             }
         }
 
-        public Color Color
-        {
-            get
-            {
-                return HexMetrics.colors[terrainTypeIndex];
-            }
-        }
-
         public int Elevation
         {
             get => elevation;

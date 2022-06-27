@@ -14,6 +14,7 @@ namespace HexMap
         [SerializeField] private bool useColor = false;
         [SerializeField] private bool useUV = false;
         [SerializeField] private bool useUV2 = false;
+        [SerializeField] private bool useTerrainType = false;
         [SerializeField] private bool drawWireFrame = false;
 
         private Mesh hexMesh;
@@ -24,6 +25,7 @@ namespace HexMap
         [NonSerialized] private List<Vector2> uvs;
         [NonSerialized] private List<Vector2> uv2s;
         [NonSerialized] private List<int> triangles;
+        [NonSerialized] private List<Vector3> terrainTypes;
 
         private void Awake()
         {
@@ -42,6 +44,7 @@ namespace HexMap
 
             vertices = ListPool<Vector3>.Get();
             triangles = ListPool<int>.Get();
+
             if (useColor)
             {
                 colors = ListPool<Color>.Get();
@@ -53,6 +56,10 @@ namespace HexMap
             if (useUV2)
             {
                 uv2s = ListPool<Vector2>.Get();
+            }
+            if (useTerrainType)
+            {
+                terrainTypes = ListPool<Vector3>.Get();
             }
         }
 
@@ -80,6 +87,11 @@ namespace HexMap
             {
                 hexMesh.SetUVs(1, uv2s);
                 ListPool<Vector2>.Add(uv2s);
+            }
+            if (useTerrainType)
+            {
+                hexMesh.SetUVs(2, terrainTypes);
+                ListPool<Vector3>.Add(terrainTypes);
             }
 
             hexMesh.RecalculateNormals();
@@ -150,6 +162,13 @@ namespace HexMap
             uv2s.Add(uv1);
             uv2s.Add(uv2);
             uv2s.Add(uv3);
+        }
+
+        public void AddTriangleTerrainTypes(Vector3 types)
+        {
+            terrainTypes.Add(types);
+            terrainTypes.Add(types);
+            terrainTypes.Add(types);
         }
 
         /// <summary>
@@ -252,6 +271,14 @@ namespace HexMap
             uv2s.Add(new Vector2(uMax, vMin));
             uv2s.Add(new Vector2(uMin, vMax));
             uv2s.Add(new Vector2(uMax, vMax));
+        }
+
+        public void AddQuadTerrainTypes(Vector3 types)
+        {
+            terrainTypes.Add(types);
+            terrainTypes.Add(types);
+            terrainTypes.Add(types);
+            terrainTypes.Add(types);
         }
 
         private void OnDrawGizmos()

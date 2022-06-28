@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: HexMesh
+  m_Name: Terrain
   m_Shader: {fileID: 4800000, guid: f11ba5ee5c8d11645b6e45713b6091d3, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4

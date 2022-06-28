@@ -1,0 +1,9 @@
+.vscode/
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp.csproj
+Hex-Map.sln
+Library/
+Logs/
+obj/
+packages/
+UserSettings/

@@ -4,6 +4,7 @@
     {
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Terrain Texture Array", 2DArray) = "white" {}
+        _GridTex ("Grid Texture", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
     }
@@ -15,8 +16,9 @@
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard fullforwardshadows vertex:vert
-
         #pragma target 3.5
+
+        #pragma multi_compile _ GRID_ON
 
         struct Input
         {
@@ -26,6 +28,7 @@
         };
 
         UNITY_DECLARE_TEX2DARRAY(_MainTex);
+        sampler2D _GridTex;
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
@@ -50,7 +53,15 @@
         {
             fixed4 c = GetTerrainColor(IN, 0) + GetTerrainColor(IN, 1) + GetTerrainColor(IN, 2);
 
-            o.Albedo = c.rgb * _Color;
+            fixed4 grid = 1;
+            #ifdef GRID_ON
+                float2 gridUV = IN.worldPos.xz;
+                gridUV.x *= 1 / (4 * 8.66025404);
+                gridUV.y *= 1 / (2 * 15.0);
+                grid = tex2D(_GridTex, gridUV);
+            #endif
+
+            o.Albedo = c.rgb * grid * _Color;
 
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

@@ -10,6 +10,7 @@ namespace HexMap.UI
     public class HexMapEditor : MonoBehaviour
     {
         public HexGrid hexGrid;
+        public Material terrainMaterial;
 
         #region 地形编辑选项
         private int activeTerrainTypeIndex = -1;
@@ -45,6 +46,11 @@ namespace HexMap.UI
         private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
         private HexDirection dragDirection;
         private HexCell previousCell;
+
+        private void Awake()
+        {
+            ShowGrid(false);
+        }
 
         private void Update()
         {
@@ -289,6 +295,18 @@ namespace HexMap.UI
         public void RefreshEntireGrid()
         {
             hexGrid.RefreshAllChunks();
+        }
+
+        public void ShowGrid(bool visible)
+        {
+            if (visible)
+            {
+                terrainMaterial.EnableKeyword("GRID_ON");
+            }
+            else
+            {
+                terrainMaterial.DisableKeyword("GRID_ON");
+            }
         }
     }
 }

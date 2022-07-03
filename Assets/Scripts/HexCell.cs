@@ -503,7 +503,7 @@ namespace HexMap
         private void UpdateDistanceLabel()
         {
             Text label = uiRect.GetComponent<Text>();
-            label.text = distance.ToString();
+            label.text = distance == int.MaxValue ? "" : distance.ToString();
         }
 
         public void Save(BinaryWriter writer)

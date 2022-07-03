@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -202,9 +204,39 @@ namespace HexMap
 
         public void FindDistanceTo(HexCell cell)
         {
+            StopAllCoroutines();
+            StartCoroutine(SearchPath(cell));
+        }
+
+        private IEnumerator SearchPath(HexCell cell)
+        {
             for (int i = 0; i < cells.Length; i++)
             {
-                cells[i].Distance = cell.coordinates.DistanceTo(cells[i].coordinates);
+                cells[i].Distance = int.MaxValue;
+            }
+
+            WaitForSeconds delay = new WaitForSeconds(1f / 60f);
+
+            Queue<HexCell> frontier = new Queue<HexCell>();
+            cell.Distance = 0;
+            frontier.Enqueue(cell);
+
+            while (frontier.Count > 0)
+            {
+                yield return delay;
+
+                HexCell current = frontier.Dequeue();
+                for (HexDirection d = HexDirection.NE; d <= HexDirection.NW; d++)
+                {
+                    HexCell neighbor = current.GetNeighbor(d);
+
+                    if (neighbor == null || neighbor.Distance != int.MaxValue) continue;
+                    if (neighbor.IsUnderWater) continue;
+                    if (current.GetEdgeType(neighbor) == HexEdgeType.Cliff) continue;
+
+                    neighbor.Distance = current.Distance + 1;
+                    frontier.Enqueue(neighbor);
+                }
             }
         }
 
@@ -237,6 +269,8 @@ namespace HexMap
 
         public void Load(BinaryReader reader, int header)
         {
+            StopAllCoroutines();
+
             int x = 15, z = 15;
             if (header >= 1)
             {

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HexMap
 {
@@ -460,6 +461,18 @@ namespace HexMap
         public bool IsSpecial => specialIndex > 0;
         #endregion
 
+        private int distance;
+
+        public int Distance
+        {
+            get => distance;
+            set
+            {
+                distance = value;
+                UpdateDistanceLabel();
+            }
+        }
+
         /// <summary>
         /// 刷新单元格所在区块以及与当前单元格相邻的区块（不是与区块相邻，而是与单元格相邻）
         /// </summary>
@@ -485,6 +498,12 @@ namespace HexMap
         private void RefreshSelfOnly()
         {
             chunk.Refresh();
+        }
+
+        private void UpdateDistanceLabel()
+        {
+            Text label = uiRect.GetComponent<Text>();
+            label.text = distance.ToString();
         }
 
         public void Save(BinaryWriter writer)

@@ -96,6 +96,10 @@ namespace HexMap.UI
                 {
                     EditCells(currentCell);
                 }
+                else
+                {
+                    hexGrid.FindDistanceTo(currentCell);
+                }
 
                 previousCell = currentCell;
             }

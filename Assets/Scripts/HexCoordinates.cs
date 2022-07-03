@@ -78,5 +78,10 @@ namespace HexMap
 
             return new HexCoordinates(ix, iz);
         }
+
+        public int DistanceTo(HexCoordinates other)
+        {
+            return (Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y) + Mathf.Abs(Z - other.Z)) / 2;
+        }
     }
 }

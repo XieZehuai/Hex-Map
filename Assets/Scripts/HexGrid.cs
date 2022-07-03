@@ -200,6 +200,14 @@ namespace HexMap
             return cells[x + z * cellCountX];
         }
 
+        public void FindDistanceTo(HexCell cell)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Distance = cell.coordinates.DistanceTo(cells[i].coordinates);
+            }
+        }
+
         public void ShowUI(bool visible)
         {
             foreach (var chunk in chunks)

@@ -31,7 +31,6 @@ namespace HexMap
             gridCanvas = GetComponentInChildren<Canvas>();
 
             cells = new HexCell[HexMetrics.chunkSizeX * HexMetrics.chunkSizeZ];
-            ShowUI(false);
         }
 
         private void LateUpdate()

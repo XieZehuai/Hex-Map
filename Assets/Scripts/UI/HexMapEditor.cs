@@ -39,8 +39,8 @@ namespace HexMap.UI
         private int activeSpecialIndex;
         #endregion
 
+        private bool editMode;
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
-
         // 用于检测鼠标拖动输入
         private bool isDrag;
         private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
@@ -92,7 +92,11 @@ namespace HexMap.UI
                     isDrag = false;
                 }
 
-                EditCells(currentCell);
+                if (editMode)
+                {
+                    EditCells(currentCell);
+                }
+
                 previousCell = currentCell;
             }
             else
@@ -232,11 +236,6 @@ namespace HexMap.UI
             brushSize = (int)size;
         }
 
-        public void ShowUI(bool visible)
-        {
-            hexGrid.ShowUI(visible);
-        }
-
         public void SetRiverMode(int mode)
         {
             riverMode = (OptionalToggle)mode;
@@ -307,6 +306,12 @@ namespace HexMap.UI
             {
                 terrainMaterial.DisableKeyword("GRID_ON");
             }
+        }
+
+        public void SetEditMode(bool toggle)
+        {
+            editMode = toggle;
+            hexGrid.ShowUI(!toggle);
         }
     }
 }

@@ -202,24 +202,28 @@ namespace HexMap
             return cells[x + z * cellCountX];
         }
 
-        public void FindDistanceTo(HexCell cell)
+        public void FindPath(HexCell fromCell, HexCell toCell)
         {
             StopAllCoroutines();
-            StartCoroutine(SearchPath(cell));
+            StartCoroutine(SearchPath(fromCell, toCell));
         }
 
-        private IEnumerator SearchPath(HexCell cell)
+        private IEnumerator SearchPath(HexCell fromCell, HexCell toCell)
         {
             for (int i = 0; i < cells.Length; i++)
             {
                 cells[i].Distance = int.MaxValue;
+                cells[i].DisableHighlight();
             }
+
+            fromCell.EnableHighlight(Color.blue);
+            toCell.EnableHighlight(Color.red);
 
             WaitForSeconds delay = new WaitForSeconds(1f / 60f);
 
             List<HexCell> frontier = new List<HexCell>();
-            cell.Distance = 0;
-            frontier.Add(cell);
+            fromCell.Distance = 0;
+            frontier.Add(fromCell);
 
             while (frontier.Count > 0)
             {
@@ -227,6 +231,19 @@ namespace HexMap
 
                 HexCell current = frontier[0];
                 frontier.RemoveAt(0);
+
+                if (current == toCell)
+                {
+                    current = current.PathFrom;
+
+                    while (current != fromCell)
+                    {
+                        current.EnableHighlight(Color.white);
+                        current = current.PathFrom;
+                    }
+
+                    break;
+                }
 
                 for (HexDirection d = HexDirection.NE; d <= HexDirection.NW; d++)
                 {
@@ -257,11 +274,13 @@ namespace HexMap
                     if (neighbor.Distance == int.MaxValue)
                     {
                         neighbor.Distance = distance;
+                        neighbor.PathFrom = current;
                         frontier.Add(neighbor);
                     }
                     else if (distance < neighbor.Distance)
                     {
                         neighbor.Distance = distance;
+                        neighbor.PathFrom = current;
                     }
 
                     frontier.Sort((x, y) => x.Distance.CompareTo(y.Distance));

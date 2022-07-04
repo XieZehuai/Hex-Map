@@ -462,6 +462,7 @@ namespace HexMap
         public bool IsSpecial => specialIndex > 0;
         #endregion
 
+        #region 寻路相关属性
         private int distance;
 
         public int Distance
@@ -473,6 +474,9 @@ namespace HexMap
                 UpdateDistanceLabel();
             }
         }
+
+        public HexCell PathFrom { get; set; }
+        #endregion
 
         /// <summary>
         /// 刷新单元格所在区块以及与当前单元格相邻的区块（不是与区块相邻，而是与单元格相邻）

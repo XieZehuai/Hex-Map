@@ -46,6 +46,8 @@ namespace HexMap.UI
         private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
         private HexDirection dragDirection;
         private HexCell previousCell;
+        private HexCell searchFromCell;
+        private HexCell searchToCell;
 
         private void Awake()
         {
@@ -96,9 +98,25 @@ namespace HexMap.UI
                 {
                     EditCells(currentCell);
                 }
-                else
+                else if (Input.GetKey(KeyCode.LeftShift) && searchToCell != currentCell)
                 {
-                    hexGrid.FindDistanceTo(currentCell);
+                    if (searchFromCell)
+                    {
+                        searchFromCell.DisableHighlight();
+                    }
+
+                    searchFromCell = currentCell;
+                    searchFromCell.EnableHighlight(Color.blue);
+
+                    if (searchToCell != null)
+                    {
+                        hexGrid.FindPath(searchFromCell, searchToCell);
+                    }
+                }
+                else if (searchFromCell != null && searchFromCell != currentCell)
+                {
+                    searchToCell = currentCell;
+                    hexGrid.FindPath(searchFromCell, searchToCell);
                 }
 
                 previousCell = currentCell;
@@ -206,6 +224,8 @@ namespace HexMap.UI
                 }
             }
         }
+
+        #region UGUI 绑定事件，设置各种参数
 
         public void SetTerrainTypeIndex(int index)
         {
@@ -317,5 +337,7 @@ namespace HexMap.UI
             editMode = toggle;
             hexGrid.ShowUI(!toggle);
         }
+
+        #endregion
     }
 }

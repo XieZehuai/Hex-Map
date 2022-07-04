@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 namespace HexMap
 {
@@ -16,7 +16,7 @@ namespace HexMap
         [Tooltip("地图的高度，大小必须是 HexMetrics.chunkSizeZ（目前是 5）的倍数")]
         [SerializeField] private int cellCountZ = 15;
         [SerializeField] private HexCell cellPrefab = default;
-        [SerializeField] private Text cellLabelPrefab = default;
+        [SerializeField] private TextMeshProUGUI cellLabelPrefab = default;
         [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Texture2D noiseSource = default;
         [SerializeField] private int seed = 1234;
@@ -157,7 +157,7 @@ namespace HexMap
             }
 
             // 显示单元格坐标UI
-            Text label = Instantiate(cellLabelPrefab);
+            TextMeshProUGUI label = Instantiate(cellLabelPrefab);
             label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
             cell.uiRect = label.rectTransform;
 

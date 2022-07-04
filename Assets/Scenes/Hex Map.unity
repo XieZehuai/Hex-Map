@@ -2471,7 +2471,7 @@ MonoBehaviour:
   cellCountZ: 15
   cellPrefab: {fileID: 2253848768794651007, guid: 350cbb9806f8af04d884b1a2f3208c5d,
     type: 3}
-  cellLabelPrefab: {fileID: 2661020081989523899, guid: 73903002685fed140838a2f8e73d0b04,
+  cellLabelPrefab: {fileID: 4405860849593559184, guid: 73903002685fed140838a2f8e73d0b04,
     type: 3}
   chunkPrefab: {fileID: 8266012465426326501, guid: 29e907bac2129dd449902769013a7941,
     type: 3}

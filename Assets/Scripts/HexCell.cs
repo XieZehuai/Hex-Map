@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace HexMap
 {
@@ -500,9 +501,22 @@ namespace HexMap
             chunk.Refresh();
         }
 
+        public void EnableHighlight(Color color)
+        {
+            Image highlight = uiRect.GetChild(0).GetComponent<Image>();
+            highlight.color = color;
+            highlight.enabled = true;
+        }
+
+        public void DisableHighlight()
+        {
+            Image highlight = uiRect.GetChild(0).GetComponent<Image>();
+            highlight.enabled = false;
+        }
+
         private void UpdateDistanceLabel()
         {
-            Text label = uiRect.GetComponent<Text>();
+            TextMeshProUGUI label = uiRect.GetComponent<TextMeshProUGUI>();
             label.text = distance == int.MaxValue ? "" : distance.ToString();
         }
 

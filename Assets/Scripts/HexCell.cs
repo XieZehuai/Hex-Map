@@ -476,6 +476,12 @@ namespace HexMap
         }
 
         public HexCell PathFrom { get; set; }
+
+        public int SearchHeuristic { get; set; }
+
+        public int SearchPriority => distance + SearchHeuristic;
+
+        public HexCell NextWithSamePriority { get; set; }
         #endregion
 
         /// <summary>

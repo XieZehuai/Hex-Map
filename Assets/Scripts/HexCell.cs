@@ -471,7 +471,6 @@ namespace HexMap
             set
             {
                 distance = value;
-                UpdateDistanceLabel();
             }
         }
 
@@ -524,10 +523,10 @@ namespace HexMap
             highlight.enabled = false;
         }
 
-        private void UpdateDistanceLabel()
+        public void SetLabel(string text)
         {
             TextMeshProUGUI label = uiRect.GetComponent<TextMeshProUGUI>();
-            label.text = distance == int.MaxValue ? "" : distance.ToString();
+            label.text = text;
         }
 
         public void Save(BinaryWriter writer)

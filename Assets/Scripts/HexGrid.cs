@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -204,13 +203,15 @@ namespace HexMap
             return cells[x + z * cellCountX];
         }
 
-        public void FindPath(HexCell fromCell, HexCell toCell)
+        public void FindPath(HexCell fromCell, HexCell toCell, int speed)
         {
             StopAllCoroutines();
-            StartCoroutine(SearchPath(fromCell, toCell));
+            StartCoroutine(SearchPath(fromCell, toCell, speed));
         }
 
-        private IEnumerator SearchPath(HexCell fromCell, HexCell toCell)
+        // speed 表示单个回合可以移动的最大距离，因为了距离因素后，寻路时就不能只考虑最短距离，
+        // 而是要同时考虑距离和回合数，有点像背包算法
+        private IEnumerator SearchPath(HexCell fromCell, HexCell toCell, int speed)
         {
             if (searchFrontier == null)
             {
@@ -224,6 +225,7 @@ namespace HexMap
             for (int i = 0; i < cells.Length; i++)
             {
                 cells[i].Distance = int.MaxValue;
+                cells[i].SetLabel(null);
                 cells[i].DisableHighlight();
             }
 
@@ -254,6 +256,8 @@ namespace HexMap
                     break;
                 }
 
+                int currentTurn = current.Distance / speed; // 移动到当前单元格需要的回合数
+
                 for (HexDirection d = HexDirection.NE; d <= HexDirection.NW; d++)
                 {
                     HexCell neighbor = current.GetNeighbor(d);
@@ -264,10 +268,10 @@ namespace HexMap
                     HexEdgeType edgeType = current.GetEdgeType(neighbor);
                     if (edgeType == HexEdgeType.Cliff) continue;
 
-                    int distance = current.Distance;
+                    int moveCost; // 从当前单元格移动到邻居单元格的消耗
                     if (current.HasRoadThroughEdge(d))
                     {
-                        distance += 1;
+                        moveCost = 1;
                     }
                     // 当前单元格与相邻单元格之间被墙壁隔开且中间没有道路
                     else if (current.Walled != neighbor.Walled)
@@ -276,13 +280,27 @@ namespace HexMap
                     }
                     else
                     {
-                        distance += edgeType == HexEdgeType.Flat ? 5 : 10;
-                        distance += neighbor.UrbanLevel + neighbor.FarmLevel + neighbor.PlantLevel;
+                        moveCost = edgeType == HexEdgeType.Flat ? 5 : 10;
+                        moveCost += neighbor.UrbanLevel + neighbor.FarmLevel + neighbor.PlantLevel;
+                    }
+
+                    int distance = current.Distance + moveCost; // 从当前单元格移动到邻居单元格的实际距离
+                    int turn = distance / speed; // 需要的回合数
+                    // 如果移动到邻居单元格需要到下一回合才能实现，就把移动到当前单元格后剩余
+                    // 的移动点数加到移动到邻居单元格需要的距离上，以此降低当前路径的优先级
+                    if (turn > currentTurn)
+                    {
+                        // 移动到当前单元格总的可用移动点数为 (currentTurn + 1) * speed，也就是 turn * speed，
+                        // 而移动到当前单元格需要的移动点数为 current.Distance，所以剩余的移动点数就是 
+                        // turn * speed - current.Distance，本来移动到邻居单元格的消耗为 distance = current.Distance + moveCost，
+                        // 加上剩余点数后就变成了 distance = turn * speed + moveCost
+                        distance = turn * speed + moveCost;
                     }
 
                     if (neighbor.Distance == int.MaxValue)
                     {
                         neighbor.Distance = distance;
+                        neighbor.SetLabel(turn.ToString());
                         neighbor.PathFrom = current;
                         neighbor.SearchHeuristic = neighbor.coordinates.DistanceTo(toCell.coordinates);
 
@@ -292,6 +310,7 @@ namespace HexMap
                     {
                         int oldPriority = neighbor.SearchPriority;
                         neighbor.Distance = distance;
+                        neighbor.SetLabel(turn.ToString());
                         neighbor.PathFrom = current;
                         searchFrontier.Change(neighbor, oldPriority);
                     }

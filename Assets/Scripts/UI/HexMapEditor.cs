@@ -110,13 +110,13 @@ namespace HexMap.UI
 
                     if (searchToCell != null)
                     {
-                        hexGrid.FindPath(searchFromCell, searchToCell);
+                        hexGrid.FindPath(searchFromCell, searchToCell, 24);
                     }
                 }
                 else if (searchFromCell != null && searchFromCell != currentCell)
                 {
                     searchToCell = currentCell;
-                    hexGrid.FindPath(searchFromCell, searchToCell);
+                    hexGrid.FindPath(searchFromCell, searchToCell, 24);
                 }
 
                 previousCell = currentCell;

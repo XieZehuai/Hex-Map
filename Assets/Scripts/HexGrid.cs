@@ -27,6 +27,8 @@ namespace HexMap
 
         private HexCellPriorityQueue searchFrontier;
         private int searchFrontierPhase;
+        private HexCell currentPathFrom, currentPathTo;
+        private bool currentPathExists;
 
         public int CellCountX => cellCountX;
         public int CellCountZ => cellCountZ;
@@ -62,6 +64,7 @@ namespace HexMap
 
         private void ClearMap()
         {
+            ClearPath();
             if (chunks != null)
             {
                 for (int i = 0; i < chunks.Length; i++)
@@ -208,14 +211,20 @@ namespace HexMap
         {
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            SearchPath(fromCell, toCell, speed);
+
+            ClearPath();
+            currentPathFrom = fromCell;
+            currentPathTo = toCell;
+            currentPathExists = SearchPath(fromCell, toCell, speed);
+            ShowPath(speed);
+
             sw.Stop();
             Debug.Log(sw.ElapsedMilliseconds);
         }
 
         // speed 表示单个回合可以移动的最大距离，因为了距离因素后，寻路时就不能只考虑最短距离，
         // 而是要同时考虑距离和回合数，有点像背包算法
-        private void SearchPath(HexCell fromCell, HexCell toCell, int speed)
+        private bool SearchPath(HexCell fromCell, HexCell toCell, int speed)
         {
             searchFrontierPhase += 2;
 
@@ -226,12 +235,6 @@ namespace HexMap
             else
             {
                 searchFrontier.Clear();
-            }
-
-            for (int i = 0; i < cells.Length; i++)
-            {
-                cells[i].SetLabel(null);
-                cells[i].DisableHighlight();
             }
 
             fromCell.EnableHighlight(Color.blue);
@@ -246,16 +249,7 @@ namespace HexMap
 
                 if (current == toCell)
                 {
-                    while (current != fromCell)
-                    {
-                        int turn = current.Distance / speed;
-                        current.SetLabel(turn.ToString());
-                        current.EnableHighlight(Color.white);
-                        current = current.PathFrom;
-                    }
-
-                    toCell.EnableHighlight(Color.red);
-                    break;
+                    return true;
                 }
 
                 int currentTurn = current.Distance / speed; // 移动到当前单元格需要的回合数
@@ -317,6 +311,50 @@ namespace HexMap
                     }
                 }
             }
+
+            return false;
+        }
+
+        private void ShowPath(int speed)
+        {
+            if (currentPathExists)
+            {
+                HexCell current = currentPathTo;
+                while (current != currentPathFrom)
+                {
+                    int turn = current.Distance / speed;
+                    current.SetLabel(turn.ToString());
+                    current.EnableHighlight(Color.white);
+                    current = current.PathFrom;
+                }
+            }
+
+            currentPathFrom.EnableHighlight(Color.blue);
+            currentPathTo.EnableHighlight(Color.red);
+        }
+
+        private void ClearPath()
+        {
+            if (currentPathExists)
+            {
+                HexCell current = currentPathTo;
+                while (current != currentPathFrom)
+                {
+                    current.SetLabel(null);
+                    current.DisableHighlight();
+                    current = current.PathFrom;
+                }
+
+                current.DisableHighlight();
+                currentPathExists = false;
+            }
+            else if (currentPathFrom != null)
+            {
+                currentPathFrom.DisableHighlight();
+                currentPathTo.DisableHighlight();
+            }
+
+            currentPathFrom = currentPathTo = null;
         }
 
         public void ShowUI(bool visible)
@@ -348,6 +386,8 @@ namespace HexMap
 
         public void Load(BinaryReader reader, int header)
         {
+            ClearPath();
+
             int x = 15, z = 15;
             if (header >= 1)
             {

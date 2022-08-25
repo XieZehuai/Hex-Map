@@ -1,5 +1,4 @@
-﻿using System.IO;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace HexMap.UI
@@ -100,23 +99,29 @@ namespace HexMap.UI
                 }
                 else if (Input.GetKey(KeyCode.LeftShift) && searchToCell != currentCell)
                 {
-                    if (searchFromCell)
+                    if (searchFromCell != currentCell)
                     {
-                        searchFromCell.DisableHighlight();
-                    }
+                        if (searchFromCell)
+                        {
+                            searchFromCell.DisableHighlight();
+                        }
 
-                    searchFromCell = currentCell;
-                    searchFromCell.EnableHighlight(Color.blue);
+                        searchFromCell = currentCell;
+                        searchFromCell.EnableHighlight(Color.blue);
 
-                    if (searchToCell != null)
-                    {
-                        hexGrid.FindPath(searchFromCell, searchToCell, 24);
+                        if (searchToCell != null)
+                        {
+                            hexGrid.FindPath(searchFromCell, searchToCell, 24);
+                        }
                     }
                 }
                 else if (searchFromCell != null && searchFromCell != currentCell)
                 {
-                    searchToCell = currentCell;
-                    hexGrid.FindPath(searchFromCell, searchToCell, 24);
+                    if (searchFromCell != currentCell)
+                    {
+                        searchToCell = currentCell;
+                        hexGrid.FindPath(searchFromCell, searchToCell, 24);
+                    }
                 }
 
                 previousCell = currentCell;

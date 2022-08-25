@@ -205,13 +205,16 @@ namespace HexMap
 
         public void FindPath(HexCell fromCell, HexCell toCell, int speed)
         {
-            StopAllCoroutines();
-            StartCoroutine(SearchPath(fromCell, toCell, speed));
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            SearchPath(fromCell, toCell, speed);
+            sw.Stop();
+            Debug.Log(sw.ElapsedMilliseconds);
         }
 
         // speed 表示单个回合可以移动的最大距离，因为了距离因素后，寻路时就不能只考虑最短距离，
         // 而是要同时考虑距离和回合数，有点像背包算法
-        private IEnumerator SearchPath(HexCell fromCell, HexCell toCell, int speed)
+        private void SearchPath(HexCell fromCell, HexCell toCell, int speed)
         {
             if (searchFrontier == null)
             {
@@ -230,29 +233,25 @@ namespace HexMap
             }
 
             fromCell.EnableHighlight(Color.blue);
-            toCell.EnableHighlight(Color.red);
-
-            WaitForSeconds delay = new WaitForSeconds(1f / 60f);
 
             fromCell.Distance = 0;
             searchFrontier.Enqueue(fromCell);
 
             while (searchFrontier.Count > 0)
             {
-                yield return delay;
-
                 HexCell current = searchFrontier.Dequeue();
 
                 if (current == toCell)
                 {
-                    current = current.PathFrom;
-
                     while (current != fromCell)
                     {
+                        int turn = current.Distance / speed;
+                        current.SetLabel(turn.ToString());
                         current.EnableHighlight(Color.white);
                         current = current.PathFrom;
                     }
 
+                    toCell.EnableHighlight(Color.red);
                     break;
                 }
 
@@ -300,7 +299,6 @@ namespace HexMap
                     if (neighbor.Distance == int.MaxValue)
                     {
                         neighbor.Distance = distance;
-                        neighbor.SetLabel(turn.ToString());
                         neighbor.PathFrom = current;
                         neighbor.SearchHeuristic = neighbor.coordinates.DistanceTo(toCell.coordinates);
 
@@ -310,7 +308,6 @@ namespace HexMap
                     {
                         int oldPriority = neighbor.SearchPriority;
                         neighbor.Distance = distance;
-                        neighbor.SetLabel(turn.ToString());
                         neighbor.PathFrom = current;
                         searchFrontier.Change(neighbor, oldPriority);
                     }
@@ -347,8 +344,6 @@ namespace HexMap
 
         public void Load(BinaryReader reader, int header)
         {
-            StopAllCoroutines();
-
             int x = 15, z = 15;
             if (header >= 1)
             {

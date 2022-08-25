@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -26,6 +26,7 @@ namespace HexMap
         private HexGridChunk[] chunks;
 
         private HexCellPriorityQueue searchFrontier;
+        private int searchFrontierPhase;
 
         public int CellCountX => cellCountX;
         public int CellCountZ => cellCountZ;
@@ -216,6 +217,8 @@ namespace HexMap
         // 而是要同时考虑距离和回合数，有点像背包算法
         private void SearchPath(HexCell fromCell, HexCell toCell, int speed)
         {
+            searchFrontierPhase += 2;
+
             if (searchFrontier == null)
             {
                 searchFrontier = new HexCellPriorityQueue();
@@ -227,19 +230,19 @@ namespace HexMap
 
             for (int i = 0; i < cells.Length; i++)
             {
-                cells[i].Distance = int.MaxValue;
                 cells[i].SetLabel(null);
                 cells[i].DisableHighlight();
             }
 
             fromCell.EnableHighlight(Color.blue);
-
+            fromCell.SearchPhase = searchFrontierPhase;
             fromCell.Distance = 0;
             searchFrontier.Enqueue(fromCell);
 
             while (searchFrontier.Count > 0)
             {
                 HexCell current = searchFrontier.Dequeue();
+                current.SearchPhase += 1;
 
                 if (current == toCell)
                 {
@@ -261,7 +264,7 @@ namespace HexMap
                 {
                     HexCell neighbor = current.GetNeighbor(d);
 
-                    if (neighbor == null) continue;
+                    if (neighbor == null || neighbor.SearchPhase > searchFrontierPhase) continue;
                     if (neighbor.IsUnderWater) continue;
 
                     HexEdgeType edgeType = current.GetEdgeType(neighbor);
@@ -296,8 +299,9 @@ namespace HexMap
                         distance = turn * speed + moveCost;
                     }
 
-                    if (neighbor.Distance == int.MaxValue)
+                    if (neighbor.SearchPhase < searchFrontierPhase)
                     {
+                        neighbor.SearchPhase = searchFrontierPhase;
                         neighbor.Distance = distance;
                         neighbor.PathFrom = current;
                         neighbor.SearchHeuristic = neighbor.coordinates.DistanceTo(toCell.coordinates);

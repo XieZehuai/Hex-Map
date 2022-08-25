@@ -481,6 +481,8 @@ namespace HexMap
         public int SearchPriority => distance + SearchHeuristic;
 
         public HexCell NextWithSamePriority { get; set; }
+
+        public int SearchPhase { get; set; }
         #endregion
 
         /// <summary>

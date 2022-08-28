@@ -15,6 +15,8 @@ namespace HexMap
         public HexGridChunk chunk;
         public RectTransform uiRect;
 
+        public HexUnit Unit { get; set; }
+
         [SerializeField] private HexCell[] neighbors = default; // 将字段标记为 SerializeField 可实现热重载
 
         #region 单元格基础属性
@@ -65,21 +67,6 @@ namespace HexMap
 
                 Refresh();
             }
-        }
-
-        private void RefreshPosition()
-        {
-            /*
-            * 根据海拔扰动强度，修改单元格和 UI 的实际高度
-            */
-            Vector3 position = transform.localPosition;
-            position.y = elevation * HexMetrics.elevationStep;
-            position.y += (HexMetrics.SampleNoise(position).y * 2f - 1f) * HexMetrics.elevationPerturbStrength;
-            transform.localPosition = position;
-
-            Vector3 uiPosition = uiRect.localPosition;
-            uiPosition.z = -position.y;
-            uiRect.localPosition = uiPosition;
         }
 
         public Vector3 Position => transform.localPosition;
@@ -176,6 +163,94 @@ namespace HexMap
                 }
             }
         }
+        #endregion
+
+        #region 单元格细节相关属性
+        private int urbanLevel;
+        private int farmLevel;
+        private int plantLevel;
+        private int specialIndex;
+
+        /// <summary>
+        /// 单元格的城市化水平，控制单元格内的建筑数量，0为最低水平，也就是没有任何建筑
+        /// </summary>
+        public int UrbanLevel
+        {
+            get => urbanLevel;
+            set
+            {
+                if (urbanLevel != value)
+                {
+                    urbanLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public int FarmLevel
+        {
+            get => farmLevel;
+            set
+            {
+                if (farmLevel != value)
+                {
+                    farmLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public int PlantLevel
+        {
+            get => plantLevel;
+            set
+            {
+                if (plantLevel != value)
+                {
+                    plantLevel = value;
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public int SpecialIndex
+        {
+            get => specialIndex;
+            set
+            {
+                if (specialIndex != value && !HasRiver)
+                {
+                    specialIndex = value;
+                    RemoveRoads();
+                    RefreshSelfOnly();
+                }
+            }
+        }
+
+        public bool IsSpecial => specialIndex > 0;
+        #endregion
+
+        #region 寻路相关属性
+        private int distance;
+
+        public int Distance
+        {
+            get => distance;
+            set
+            {
+                distance = value;
+            }
+        }
+
+        public HexCell PathFrom { get; set; }
+
+        public int SearchHeuristic { get; set; }
+
+        public int SearchPriority => distance + SearchHeuristic;
+
+        public HexCell NextWithSamePriority { get; set; }
+
+        public int SearchPhase { get; set; }
         #endregion
 
         #region 与相邻单元格有关的方法
@@ -397,93 +472,20 @@ namespace HexMap
         }
         #endregion
 
-        #region 单元格细节相关属性
-        private int urbanLevel;
-        private int farmLevel;
-        private int plantLevel;
-        private int specialIndex;
-
-        /// <summary>
-        /// 单元格的城市化水平，控制单元格内的建筑数量，0为最低水平，也就是没有任何建筑
-        /// </summary>
-        public int UrbanLevel
+        private void RefreshPosition()
         {
-            get => urbanLevel;
-            set
-            {
-                if (urbanLevel != value)
-                {
-                    urbanLevel = value;
-                    RefreshSelfOnly();
-                }
-            }
+            /*
+            * 根据海拔扰动强度，修改单元格和 UI 的实际高度
+            */
+            Vector3 position = transform.localPosition;
+            position.y = elevation * HexMetrics.elevationStep;
+            position.y += (HexMetrics.SampleNoise(position).y * 2f - 1f) * HexMetrics.elevationPerturbStrength;
+            transform.localPosition = position;
+
+            Vector3 uiPosition = uiRect.localPosition;
+            uiPosition.z = -position.y;
+            uiRect.localPosition = uiPosition;
         }
-
-        public int FarmLevel
-        {
-            get => farmLevel;
-            set
-            {
-                if (farmLevel != value)
-                {
-                    farmLevel = value;
-                    RefreshSelfOnly();
-                }
-            }
-        }
-
-        public int PlantLevel
-        {
-            get => plantLevel;
-            set
-            {
-                if (plantLevel != value)
-                {
-                    plantLevel = value;
-                    RefreshSelfOnly();
-                }
-            }
-        }
-
-        public int SpecialIndex
-        {
-            get => specialIndex;
-            set
-            {
-                if (specialIndex != value && !HasRiver)
-                {
-                    specialIndex = value;
-                    RemoveRoads();
-                    RefreshSelfOnly();
-                }
-            }
-        }
-
-        public bool IsSpecial => specialIndex > 0;
-        #endregion
-
-        #region 寻路相关属性
-        private int distance;
-
-        public int Distance
-        {
-            get => distance;
-            set
-            {
-                distance = value;
-            }
-        }
-
-        public HexCell PathFrom { get; set; }
-
-        public int SearchHeuristic { get; set; }
-
-        public int SearchPriority => distance + SearchHeuristic;
-
-        public HexCell NextWithSamePriority { get; set; }
-
-        public int SearchPhase { get; set; }
-        #endregion
 
         /// <summary>
         /// 刷新单元格所在区块以及与当前单元格相邻的区块（不是与区块相邻，而是与单元格相邻）
@@ -501,6 +503,11 @@ namespace HexMap
                         neighbors[i].chunk.Refresh();
                     }
                 }
+
+                if (Unit != null)
+                {
+                    Unit.ValidateLocation();
+                }
             }
         }
 
@@ -510,6 +517,10 @@ namespace HexMap
         private void RefreshSelfOnly()
         {
             chunk.Refresh();
+            if (Unit != null)
+            {
+                Unit.ValidateLocation();
+            }
         }
 
         public void EnableHighlight(Color color)

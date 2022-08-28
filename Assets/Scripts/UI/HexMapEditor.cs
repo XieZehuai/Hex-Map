@@ -10,6 +10,7 @@ namespace HexMap.UI
     {
         public HexGrid hexGrid;
         public Material terrainMaterial;
+        public HexUnit unitPrefab;
 
         #region 地形编辑选项
         private int activeTerrainTypeIndex = -1;
@@ -66,24 +67,36 @@ namespace HexMap.UI
             }
 
             // 当点击鼠标左键并且鼠标不处于UI上时处理点击操作
-            if (Input.GetMouseButton(0) && !isPointOverUI && !isDragOnUI)
+            if (!isPointOverUI && !isDragOnUI)
             {
-                HandleInput();
+                if (Input.GetMouseButton(0))
+                {
+                    HandleInput();
+                    return;
+                }
+
+                if (Input.GetKeyDown(KeyCode.U))
+                {
+                    if (Input.GetKey(KeyCode.LeftShift))
+                    {
+                        DestroyUnit();
+                    }
+                    else
+                    {
+                        CreateUnit();
+                    }
+                    return;
+                }
             }
-            else
-            {
-                previousCell = null;
-            }
+
+            previousCell = null;
         }
 
         private void HandleInput()
         {
-            Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(inputRay, out RaycastHit hit))
+            HexCell currentCell = GetCellUnderCursor();
+            if (currentCell != null)
             {
-                HexCell currentCell = hexGrid.GetCell(hit.point);
-
                 if (previousCell != null && previousCell != currentCell)
                 {
                     ValidateDrag(currentCell);
@@ -130,6 +143,17 @@ namespace HexMap.UI
             {
                 previousCell = null;
             }
+        }
+
+        private HexCell GetCellUnderCursor()
+        {
+            Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(inputRay, out RaycastHit hit))
+            {
+                return hexGrid.GetCell(hit.point);
+            }
+
+            return null;
         }
 
         private void ValidateDrag(HexCell currentCell)
@@ -227,6 +251,27 @@ namespace HexMap.UI
                         otherCell.AddRoad(dragDirection);
                     }
                 }
+            }
+        }
+
+        private void CreateUnit()
+        {
+            HexCell cell = GetCellUnderCursor();
+            if (cell != null && cell.Unit == null)
+            {
+                HexUnit unit = Instantiate(unitPrefab);
+                unit.transform.SetParent(hexGrid.transform, false);
+                unit.Location = cell;
+                unit.Orientation = Random.Range(0f, 360f);
+            }
+        }
+
+        private void DestroyUnit()
+        {
+            HexCell cell = GetCellUnderCursor();
+            if (cell != null && cell.Unit != null)
+            {
+                cell.Unit.Die();
             }
         }
 

@@ -10,7 +10,6 @@ namespace HexMap.UI
     {
         public HexGrid hexGrid;
         public Material terrainMaterial;
-        public HexUnit unitPrefab;
 
         #region 地形编辑选项
         private int activeTerrainTypeIndex = -1;
@@ -259,10 +258,9 @@ namespace HexMap.UI
             HexCell cell = GetCellUnderCursor();
             if (cell != null && cell.Unit == null)
             {
-                HexUnit unit = Instantiate(unitPrefab);
-                unit.transform.SetParent(hexGrid.transform, false);
-                unit.Location = cell;
-                unit.Orientation = Random.Range(0f, 360f);
+                HexUnit unit = Instantiate(HexUnit.unitPrefab);
+                float orientation = Random.Range(0f, 360f);
+                hexGrid.AddUnit(unit, cell, orientation);
             }
         }
 
@@ -271,7 +269,7 @@ namespace HexMap.UI
             HexCell cell = GetCellUnderCursor();
             if (cell != null && cell.Unit != null)
             {
-                cell.Unit.Die();
+                hexGrid.RemoveUnit(cell.Unit);
             }
         }
 

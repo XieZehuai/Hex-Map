@@ -8,6 +8,8 @@ namespace HexMap.UI
 
     public class SaveLoadMenu : MonoBehaviour
     {
+        public const int SAVE_FILE_VERSION = 2;
+
         public TextMeshProUGUI menuLabel;
         public TextMeshProUGUI actionButtonLabel;
         public TMP_InputField nameInput;
@@ -125,7 +127,7 @@ namespace HexMap.UI
         {
             using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
             {
-                writer.Write(1);
+                writer.Write(SAVE_FILE_VERSION);
                 hexGrid.Save(writer);
             }
         }
@@ -142,7 +144,7 @@ namespace HexMap.UI
             {
                 int header = reader.ReadInt32();
 
-                if (header <= 1)
+                if (header <= 2)
                 {
                     hexGrid.Load(reader, header);
                     HexMapCamera.Instance.ValidatePosition();

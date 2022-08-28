@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 
 namespace HexMap
 {
     public class HexUnit : MonoBehaviour
     {
+        public static HexUnit unitPrefab;
+
         private HexCell location;
         private float orientation;
 
@@ -37,6 +40,22 @@ namespace HexMap
         {
             location.Unit = null;
             Destroy(gameObject);
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+            location.coordinates.Save(writer);
+            writer.Write(orientation);
+        }
+
+        public static void Load(BinaryReader reader, HexGrid grid)
+        {
+            HexCoordinates coordinates = HexCoordinates.Load(reader);
+            float orientation = reader.ReadSingle();
+
+            HexUnit unit = Instantiate(unitPrefab);
+            HexCell cell = grid.GetCell(coordinates);
+            grid.AddUnit(unit, cell, orientation);
         }
     }
 }

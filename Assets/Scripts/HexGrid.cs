@@ -19,11 +19,13 @@ namespace HexMap
         [SerializeField] private HexGridChunk chunkPrefab = default;
         [SerializeField] private Texture2D noiseSource = default;
         [SerializeField] private int seed = 1234;
+        [SerializeField] private HexUnit unitPrefab = default;
 
         private int chunkCountX;
         private int chunkCountZ;
         private HexCell[] cells;
         private HexGridChunk[] chunks;
+        private List<HexUnit> units = new List<HexUnit>();
 
         private HexCellPriorityQueue searchFrontier;
         private int searchFrontierPhase;
@@ -37,6 +39,7 @@ namespace HexMap
         {
             HexMetrics.noiseSource = noiseSource;
             HexMetrics.InitializeHashGrid(seed);
+            HexUnit.unitPrefab = unitPrefab;
 
             CreateMap(cellCountX, cellCountZ);
         }
@@ -65,6 +68,8 @@ namespace HexMap
         private void ClearMap()
         {
             ClearPath();
+            ClearUnits();
+
             if (chunks != null)
             {
                 for (int i = 0; i < chunks.Length; i++)
@@ -80,6 +85,7 @@ namespace HexMap
             {
                 HexMetrics.noiseSource = noiseSource;
                 HexMetrics.InitializeHashGrid(seed);
+                HexUnit.unitPrefab = unitPrefab;
             }
         }
 
@@ -357,6 +363,30 @@ namespace HexMap
             currentPathFrom = currentPathTo = null;
         }
 
+        public void AddUnit(HexUnit unit, HexCell location, float orientation)
+        {
+            units.Add(unit);
+            unit.transform.SetParent(transform, false);
+            unit.Location = location;
+            unit.Orientation = orientation;
+        }
+
+        public void RemoveUnit(HexUnit unit)
+        {
+            units.Remove(unit);
+            unit.Die();
+        }
+
+        private void ClearUnits()
+        {
+            for (int i = 0; i < units.Count; i++)
+            {
+                units[i].Die();
+            }
+
+            units.Clear();
+        }
+
         public void ShowUI(bool visible)
         {
             foreach (var chunk in chunks)
@@ -382,11 +412,18 @@ namespace HexMap
             {
                 cells[i].Save(writer);
             }
+
+            writer.Write(units.Count);
+            for (int i = 0; i < units.Count; i++)
+            {
+                units[i].Save(writer);
+            }
         }
 
         public void Load(BinaryReader reader, int header)
         {
             ClearPath();
+            ClearUnits();
 
             int x = 15, z = 15;
             if (header >= 1)
@@ -410,6 +447,15 @@ namespace HexMap
             for (int i = 0; i < chunks.Length; i++)
             {
                 chunks[i].Refresh();
+            }
+
+            if (header >= 2)
+            {
+                int unitCount = reader.ReadInt32();
+                for (int i = 0; i < unitCount; i++)
+                {
+                    HexUnit.Load(reader, this);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 
 namespace HexMap
@@ -22,14 +23,33 @@ namespace HexMap
             this.z = z;
         }
 
-        public override string ToString()
+        public int DistanceTo(HexCoordinates other)
         {
-            return $"({X.ToString()}, {Y.ToString()}, {Z.ToString()})";
+            return (Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y) + Mathf.Abs(Z - other.Z)) / 2;
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+            writer.Write(x);
+            writer.Write(z);
+        }
+
+        public static HexCoordinates Load(BinaryReader reader)
+        {
+            HexCoordinates coordinates;
+            coordinates.x = reader.ReadInt32();
+            coordinates.z = reader.ReadInt32();
+            return coordinates;
         }
 
         public string ToStringOnSeparateLines()
         {
             return X.ToString() + "\n" + Y.ToString() + "\n" + Z.ToString();
+        }
+
+        public override string ToString()
+        {
+            return $"({X.ToString()}, {Y.ToString()}, {Z.ToString()})";
         }
 
         /// <summary>
@@ -77,11 +97,6 @@ namespace HexMap
             }
 
             return new HexCoordinates(ix, iz);
-        }
-
-        public int DistanceTo(HexCoordinates other)
-        {
-            return (Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y) + Mathf.Abs(Z - other.Z)) / 2;
         }
     }
 }

@@ -38,19 +38,17 @@ namespace HexMap.UI
         private int activeSpecialIndex;
         #endregion
 
-        private bool editMode;
         private int brushSize; // 笔刷大小，覆盖范围为 2 * brushSize + 1
         // 用于检测鼠标拖动输入
         private bool isDrag;
         private bool isDragOnUI; // 是否在 UI 上拖动鼠标，防止在编辑面板上调整参数时鼠标划到地图上
         private HexDirection dragDirection;
         private HexCell previousCell;
-        private HexCell searchFromCell;
-        private HexCell searchToCell;
 
         private void Awake()
         {
             ShowGrid(false);
+            SetEditMode(false);
         }
 
         private void Update()
@@ -105,36 +103,7 @@ namespace HexMap.UI
                     isDrag = false;
                 }
 
-                if (editMode)
-                {
-                    EditCells(currentCell);
-                }
-                else if (Input.GetKey(KeyCode.LeftShift) && searchToCell != currentCell)
-                {
-                    if (searchFromCell != currentCell)
-                    {
-                        if (searchFromCell)
-                        {
-                            searchFromCell.DisableHighlight();
-                        }
-
-                        searchFromCell = currentCell;
-                        searchFromCell.EnableHighlight(Color.blue);
-
-                        if (searchToCell != null)
-                        {
-                            hexGrid.FindPath(searchFromCell, searchToCell, 24);
-                        }
-                    }
-                }
-                else if (searchFromCell != null && searchFromCell != currentCell)
-                {
-                    if (searchFromCell != currentCell)
-                    {
-                        searchToCell = currentCell;
-                        hexGrid.FindPath(searchFromCell, searchToCell, 24);
-                    }
-                }
+                EditCells(currentCell);
 
                 previousCell = currentCell;
             }
@@ -146,13 +115,8 @@ namespace HexMap.UI
 
         private HexCell GetCellUnderCursor()
         {
-            Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(inputRay, out RaycastHit hit))
-            {
-                return hexGrid.GetCell(hit.point);
-            }
-
-            return null;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            return hexGrid.GetCell(ray);
         }
 
         private void ValidateDrag(HexCell currentCell)
@@ -382,8 +346,7 @@ namespace HexMap.UI
 
         public void SetEditMode(bool toggle)
         {
-            editMode = toggle;
-            hexGrid.ShowUI(!toggle);
+            enabled = toggle;
         }
 
         #endregion

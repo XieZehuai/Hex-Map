@@ -35,6 +35,8 @@ namespace HexMap
         public int CellCountX => cellCountX;
         public int CellCountZ => cellCountZ;
 
+        public bool HasPath => currentPathExists;
+
         private void Awake()
         {
             HexMetrics.noiseSource = noiseSource;
@@ -188,6 +190,16 @@ namespace HexMap
             chunk.AddCell(localX + localZ * HexMetrics.chunkSizeX, cell);
         }
 
+        public HexCell GetCell(Ray ray)
+        {
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                return GetCell(hit.point);
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// 获取目标位置对应的单元格
         /// </summary>
@@ -215,17 +227,11 @@ namespace HexMap
 
         public void FindPath(HexCell fromCell, HexCell toCell, int speed)
         {
-            var sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-
             ClearPath();
             currentPathFrom = fromCell;
             currentPathTo = toCell;
             currentPathExists = SearchPath(fromCell, toCell, speed);
             ShowPath(speed);
-
-            sw.Stop();
-            Debug.Log(sw.ElapsedMilliseconds);
         }
 
         // speed 表示单个回合可以移动的最大距离，因为了距离因素后，寻路时就不能只考虑最短距离，
@@ -265,7 +271,7 @@ namespace HexMap
                     HexCell neighbor = current.GetNeighbor(d);
 
                     if (neighbor == null || neighbor.SearchPhase > searchFrontierPhase) continue;
-                    if (neighbor.IsUnderWater) continue;
+                    if (neighbor.IsUnderWater || neighbor.Unit != null) continue;
 
                     HexEdgeType edgeType = current.GetEdgeType(neighbor);
                     if (edgeType == HexEdgeType.Cliff) continue;
@@ -339,7 +345,7 @@ namespace HexMap
             currentPathTo.EnableHighlight(Color.red);
         }
 
-        private void ClearPath()
+        public void ClearPath()
         {
             if (currentPathExists)
             {

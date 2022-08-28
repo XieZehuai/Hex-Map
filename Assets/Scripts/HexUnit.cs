@@ -15,6 +15,11 @@ namespace HexMap
             get { return location; }
             set
             {
+                if (location != null)
+                {
+                    location.Unit = null;
+                }
+
                 location = value;
                 value.Unit = this;
                 transform.localPosition = value.Position;
@@ -34,6 +39,11 @@ namespace HexMap
         public void ValidateLocation()
         {
             transform.localPosition = location.Position;
+        }
+
+        public bool IsValidDestination(HexCell cell)
+        {
+            return !cell.IsUnderWater && cell.Unit == null;
         }
 
         public void Die()

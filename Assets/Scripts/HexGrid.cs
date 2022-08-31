@@ -264,7 +264,7 @@ namespace HexMap
                     return true;
                 }
 
-                int currentTurn = current.Distance / speed; // 移动到当前单元格需要的回合数
+                int currentTurn = (current.Distance - 1) / speed; // 移动到当前单元格需要的回合数
 
                 for (HexDirection d = HexDirection.NE; d <= HexDirection.NW; d++)
                 {
@@ -293,7 +293,7 @@ namespace HexMap
                     }
 
                     int distance = current.Distance + moveCost; // 从当前单元格移动到邻居单元格的实际距离
-                    int turn = distance / speed; // 需要的回合数
+                    int turn = (distance - 1) / speed; // 需要的回合数
                     // 如果移动到邻居单元格需要到下一回合才能实现，就把移动到当前单元格后剩余
                     // 的移动点数加到移动到邻居单元格需要的距离上，以此降低当前路径的优先级
                     if (turn > currentTurn)
@@ -334,7 +334,7 @@ namespace HexMap
                 HexCell current = currentPathTo;
                 while (current != currentPathFrom)
                 {
-                    int turn = current.Distance / speed;
+                    int turn = (current.Distance - 1) / speed;
                     current.SetLabel(turn.ToString());
                     current.EnableHighlight(Color.white);
                     current = current.PathFrom;
@@ -343,6 +343,24 @@ namespace HexMap
 
             currentPathFrom.EnableHighlight(Color.blue);
             currentPathTo.EnableHighlight(Color.red);
+        }
+
+        public List<HexCell> GetPath()
+        {
+            if (!currentPathExists)
+            {
+                return null;
+            }
+
+            List<HexCell> path = ListPool<HexCell>.Get();
+            for (HexCell cell = currentPathTo; cell != currentPathFrom; cell = cell.PathFrom)
+            {
+                path.Add(cell);
+            }
+            path.Add(currentPathFrom);
+            path.Reverse();
+
+            return path;
         }
 
         public void ClearPath()

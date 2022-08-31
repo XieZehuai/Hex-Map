@@ -72,17 +72,35 @@ namespace HexMap
 
         private IEnumerator TravelPath()
         {
+            Vector3 a, b, c = pathToTravel[0].Position;
+            float t = Time.deltaTime * travelSpeed;
+
             for (int i = 1; i < pathToTravel.Count; i++)
             {
-                Vector3 a = pathToTravel[i - 1].Position;
-                Vector3 b = pathToTravel[i].Position;
+                a = c;
+                b = pathToTravel[i - 1].Position;
+                c = (b + pathToTravel[i].Position) * 0.5f;
 
-                for (float t = 0f; t < 1f; t += Time.deltaTime * travelSpeed)
+                for (; t < 1f; t += Time.deltaTime * travelSpeed)
                 {
-                    transform.localPosition = Vector3.Lerp(a, b, t);
+                    transform.localPosition = Bezier.GetPoint(a, b, c, t);
                     yield return null;
                 }
+
+                t -= 1f;
             }
+
+            a = c;
+            b = pathToTravel[pathToTravel.Count - 1].Position;
+            c = b;
+
+            for (; t < 1f; t += Time.deltaTime * travelSpeed)
+            {
+                transform.localPosition = Bezier.GetPoint(a, b, c, t);
+                yield return null;
+            }
+
+            transform.localPosition = location.Position;
         }
 
         public void Die()
@@ -107,23 +125,37 @@ namespace HexMap
             grid.AddUnit(unit, cell, orientation);
         }
 
-        // private void OnDrawGizmos()
-        // {
-        //     if (pathToTravel == null || pathToTravel.Count == 0)
-        //     {
-        //         return;
-        //     }
+        private void OnDrawGizmos()
+        {
+            if (pathToTravel == null || pathToTravel.Count == 0)
+            {
+                return;
+            }
 
-        //     for (int i = 1; i < pathToTravel.Count; i++)
-        //     {
-        //         Vector3 a = pathToTravel[i - 1].Position;
-        //         Vector3 b = pathToTravel[i].Position;
+            Gizmos.color = Color.cyan;
 
-        //         for (float j = 0f; j < 1f; j += 0.1f)
-        //         {
-        //             Gizmos.DrawSphere(Vector3.Lerp(a, b, j), 2f);
-        //         }
-        //     }
-        // }
+            Vector3 a, b, c = pathToTravel[0].Position;
+
+            for (int i = 1; i < pathToTravel.Count; i++)
+            {
+                a = c;
+                b = pathToTravel[i - 1].Position;
+                c = (b + pathToTravel[i].Position) * 0.5f;
+
+                for (float t = 0f; t < 1f; t += 0.1f)
+                {
+                    Gizmos.DrawSphere(Bezier.GetPoint(a, b, c, t), 2f);
+                }
+            }
+
+            a = c;
+            b = pathToTravel[pathToTravel.Count - 1].Position;
+            c = b;
+
+            for (float t = 0f; t < 1f; t += 0.1f)
+            {
+                Gizmos.DrawSphere(Bezier.GetPoint(a, b, c, t), 2f);
+            }
+        }
     }
 }

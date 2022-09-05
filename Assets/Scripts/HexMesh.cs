@@ -11,21 +11,21 @@ namespace HexMap
     public class HexMesh : MonoBehaviour
     {
         [SerializeField] private bool useCollider = false;
-        [SerializeField] private bool useColor = false;
+        [SerializeField] private bool useCellData = false;
         [SerializeField] private bool useUV = false;
         [SerializeField] private bool useUV2 = false;
-        [SerializeField] private bool useTerrainType = false;
+
         [SerializeField] private bool drawWireFrame = false;
 
         private Mesh hexMesh;
         private MeshCollider meshCollider;
 
         [NonSerialized] private List<Vector3> vertices;
-        [NonSerialized] private List<Color> colors;
+        [NonSerialized] private List<Color> cellWeights;
+        [NonSerialized] private List<Vector3> cellIndices;
         [NonSerialized] private List<Vector2> uvs;
         [NonSerialized] private List<Vector2> uv2s;
         [NonSerialized] private List<int> triangles;
-        [NonSerialized] private List<Vector3> terrainTypes;
 
         private void Awake()
         {
@@ -45,9 +45,10 @@ namespace HexMap
             vertices = ListPool<Vector3>.Get();
             triangles = ListPool<int>.Get();
 
-            if (useColor)
+            if (useCellData)
             {
-                colors = ListPool<Color>.Get();
+                cellWeights = ListPool<Color>.Get();
+                cellIndices = ListPool<Vector3>.Get();
             }
             if (useUV)
             {
@@ -56,10 +57,6 @@ namespace HexMap
             if (useUV2)
             {
                 uv2s = ListPool<Vector2>.Get();
-            }
-            if (useTerrainType)
-            {
-                terrainTypes = ListPool<Vector3>.Get();
             }
         }
 
@@ -73,10 +70,12 @@ namespace HexMap
             ListPool<Vector3>.Add(vertices);
             ListPool<int>.Add(triangles);
 
-            if (useColor)
+            if (useCellData)
             {
-                hexMesh.SetColors(colors);
-                ListPool<Color>.Add(colors);
+                hexMesh.SetColors(cellWeights);
+                ListPool<Color>.Add(cellWeights);
+                hexMesh.SetUVs(2, cellIndices);
+                ListPool<Vector3>.Add(cellIndices);
             }
             if (useUV)
             {
@@ -87,11 +86,6 @@ namespace HexMap
             {
                 hexMesh.SetUVs(1, uv2s);
                 ListPool<Vector2>.Add(uv2s);
-            }
-            if (useTerrainType)
-            {
-                hexMesh.SetUVs(2, terrainTypes);
-                ListPool<Vector3>.Add(terrainTypes);
             }
 
             hexMesh.RecalculateNormals();
@@ -130,24 +124,20 @@ namespace HexMap
             triangles.Add(vertexIndex + 2);
         }
 
-        /// <summary>
-        /// 为当前三角形添加三个顶点的颜色，顶点顺序遵循左手定则
-        /// </summary>
-        public void AddTriangleColor(Color c1, Color c2, Color c3)
+        public void AddTriangleCellData(Vector3 indices, Color weights)
         {
-            colors.Add(c1);
-            colors.Add(c2);
-            colors.Add(c3);
+            AddTriangleCellData(indices, weights, weights, weights);
         }
 
-        /// <summary>
-        /// 为当前三角形添加三个顶点的颜色
-        /// </summary>
-        public void AddTriangleColor(Color c1)
+        public void AddTriangleCellData(Vector3 indices, Color weights1, Color weights2, Color weights3)
         {
-            colors.Add(c1);
-            colors.Add(c1);
-            colors.Add(c1);
+            cellIndices.Add(indices);
+            cellIndices.Add(indices);
+            cellIndices.Add(indices);
+
+            cellWeights.Add(weights1);
+            cellWeights.Add(weights2);
+            cellWeights.Add(weights3);
         }
 
         public void AddTriangleUV(Vector2 uv1, Vector2 uv2, Vector2 uv3)
@@ -162,13 +152,6 @@ namespace HexMap
             uv2s.Add(uv1);
             uv2s.Add(uv2);
             uv2s.Add(uv3);
-        }
-
-        public void AddTriangleTerrainTypes(Vector3 types)
-        {
-            terrainTypes.Add(types);
-            terrainTypes.Add(types);
-            terrainTypes.Add(types);
         }
 
         /// <summary>
@@ -209,36 +192,27 @@ namespace HexMap
             triangles.Add(vertexIndex + 3);
         }
 
-        /// <summary>
-        /// 为当前四边形添加顶点的颜色，四边形由两个三角形组成，颜色顺序分别为
-        /// [c1, c3, c2] 和 [c2, c3, c4]，顶点顺序遵循左手定则
-        /// </summary>
-        public void AddQuadColor(Color c1, Color c2, Color c3, Color c4)
+        public void AddQuadCellData(Vector3 indices, Color weights)
         {
-            colors.Add(c1);
-            colors.Add(c2);
-            colors.Add(c3);
-            colors.Add(c4);
+            AddQuadCellData(indices, weights, weights, weights, weights);
         }
 
-        /// <summary>
-        /// 为当前四边形添加顶点的颜色，四边形由两个三角形组成，颜色顺序分别为
-        /// [c1, c2, c1] 和 [c1, c2, c2]，顶点顺序遵循左手定则
-        /// </summary>
-        public void AddQuadColor(Color c1, Color c2)
+        public void AddQuadCellData(Vector3 indices, Color weights1, Color weights2)
         {
-            colors.Add(c1);
-            colors.Add(c1);
-            colors.Add(c2);
-            colors.Add(c2);
+            AddQuadCellData(indices, weights1, weights1, weights2, weights2);
         }
 
-        public void AddQuadColor(Color color)
+        public void AddQuadCellData(Vector3 indices, Color weights1, Color weights2, Color weights3, Color weights4)
         {
-            colors.Add(color);
-            colors.Add(color);
-            colors.Add(color);
-            colors.Add(color);
+            cellIndices.Add(indices);
+            cellIndices.Add(indices);
+            cellIndices.Add(indices);
+            cellIndices.Add(indices);
+
+            cellWeights.Add(weights1);
+            cellWeights.Add(weights2);
+            cellWeights.Add(weights3);
+            cellWeights.Add(weights4);
         }
 
         public void AddQuadUV(Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector2 uv4)
@@ -271,14 +245,6 @@ namespace HexMap
             uv2s.Add(new Vector2(uMax, vMin));
             uv2s.Add(new Vector2(uMin, vMax));
             uv2s.Add(new Vector2(uMax, vMax));
-        }
-
-        public void AddQuadTerrainTypes(Vector3 types)
-        {
-            terrainTypes.Add(types);
-            terrainTypes.Add(types);
-            terrainTypes.Add(types);
-            terrainTypes.Add(types);
         }
 
         private void OnDrawGizmos()

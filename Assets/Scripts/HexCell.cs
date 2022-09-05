@@ -19,6 +19,9 @@ namespace HexMap
 
         [SerializeField] private HexCell[] neighbors = default; // 将字段标记为 SerializeField 可实现热重载
 
+        public HexCellShaderData ShaderData { get; set; }
+        public int Index { get; set; }
+
         #region 单元格基础属性
         private int elevation = int.MinValue;
         private int terrainTypeIndex;
@@ -34,7 +37,7 @@ namespace HexMap
                 if (terrainTypeIndex != value)
                 {
                     terrainTypeIndex = value;
-                    Refresh();
+                    ShaderData.RefreshTerrain(this);
                 }
             }
         }
@@ -585,6 +588,8 @@ namespace HexMap
         public void Load(BinaryReader reader)
         {
             terrainTypeIndex = reader.ReadByte();
+            ShaderData.RefreshTerrain(this);
+
             elevation = reader.ReadByte();
             waterLevel = reader.ReadByte();
             urbanLevel = reader.ReadByte();

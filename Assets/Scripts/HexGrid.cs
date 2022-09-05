@@ -32,6 +32,8 @@ namespace HexMap
         private HexCell currentPathFrom, currentPathTo;
         private bool currentPathExists;
 
+        private HexCellShaderData cellShaderData;
+
         public int CellCountX => cellCountX;
         public int CellCountZ => cellCountZ;
 
@@ -42,6 +44,7 @@ namespace HexMap
             HexMetrics.noiseSource = noiseSource;
             HexMetrics.InitializeHashGrid(seed);
             HexUnit.unitPrefab = unitPrefab;
+            cellShaderData = gameObject.AddComponent<HexCellShaderData>();
 
             CreateMap(cellCountX, cellCountZ);
         }
@@ -61,6 +64,7 @@ namespace HexMap
             cellCountZ = z;
             chunkCountX = cellCountX / HexMetrics.chunkSizeX;
             chunkCountZ = cellCountZ / HexMetrics.chunkSizeZ;
+            cellShaderData.Initialize(cellCountX, cellCountZ);
             CreateChunks();
             CreateCells();
 
@@ -140,9 +144,11 @@ namespace HexMap
 
             // 创建单元格
             HexCell cell = cells[i] = Instantiate(cellPrefab);
+            cell.name = "Hex Cell " + cell.coordinates.ToString();
             cell.transform.localPosition = position;
             cell.coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
-            cell.name = "Hex Cell " + cell.coordinates.ToString();
+            cell.ShaderData = cellShaderData;
+            cell.Index = i;
 
             // 设置单元格对应的邻居关系
             if (x > 0)

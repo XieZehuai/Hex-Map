@@ -15,12 +15,14 @@ namespace HexMap
         public HexGridChunk chunk;
         public RectTransform uiRect;
 
-        public HexUnit Unit { get; set; }
-
         [SerializeField] private HexCell[] neighbors = default; // 将字段标记为 SerializeField 可实现热重载
 
+        private int visibility;
+
+        public HexUnit Unit { get; set; }
         public HexCellShaderData ShaderData { get; set; }
         public int Index { get; set; }
+        public bool IsVisible => visibility > 0;
 
         #region 单元格基础属性
         private int elevation = int.MinValue;
@@ -543,6 +545,24 @@ namespace HexMap
         {
             TextMeshProUGUI label = uiRect.GetComponent<TextMeshProUGUI>();
             label.text = text;
+        }
+
+        public void IncreaseVisibility()
+        {
+            visibility++;
+            if (visibility == 1)
+            {
+                ShaderData.RefreshVisibility(this);
+            }
+        }
+
+        public void DecreaseVisibility()
+        {
+            visibility--;
+            if (visibility == 0)
+            {
+                ShaderData.RefreshVisibility(this);
+            }
         }
 
         public void Save(BinaryWriter writer)

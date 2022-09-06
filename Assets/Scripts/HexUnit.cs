@@ -15,16 +15,7 @@ namespace HexMap
 
         private const float travelSpeed = 4f;
         private const float rotationSpeed = 180f;
-
-        private void OnEnable()
-        {
-            // 如果在移动的过程中，重新编译代码，会导致协程停止，使单位停止移动，
-            // 所以在重新编译后，重新设置单位的坐标
-            if (location)
-            {
-                transform.localPosition = location.Position;
-            }
-        }
+        private const int visionRange = 3;
 
         public HexCell Location
         {
@@ -33,11 +24,13 @@ namespace HexMap
             {
                 if (location != null)
                 {
+                    Grid.DecreaseVisibility(location, visionRange);
                     location.Unit = null;
                 }
 
                 location = value;
                 value.Unit = this;
+                Grid.IncreaseVisibility(location, visionRange);
                 transform.localPosition = value.Position;
             }
         }
@@ -49,6 +42,18 @@ namespace HexMap
             {
                 orientation = value;
                 transform.localRotation = Quaternion.Euler(0f, value, 0f);
+            }
+        }
+
+        public HexGrid Grid { get; set; }
+
+        private void OnEnable()
+        {
+            // 如果在移动的过程中，重新编译代码，会导致协程停止，使单位停止移动，
+            // 所以在重新编译后，重新设置单位的坐标
+            if (location)
+            {
+                transform.localPosition = location.Position;
             }
         }
 
@@ -64,7 +69,10 @@ namespace HexMap
 
         public void Travel(List<HexCell> path)
         {
-            Location = path[path.Count - 1];
+            location.Unit = null;
+            location = path[path.Count - 1];
+            location.Unit = this;
+
             pathToTravel = path;
 
             StopAllCoroutines();
@@ -74,9 +82,9 @@ namespace HexMap
         private IEnumerator TravelPath()
         {
             Vector3 a, b, c = pathToTravel[0].Position;
-            transform.localPosition = c;
 
             yield return LookAt(pathToTravel[1].Position);
+            Grid.DecreaseVisibility(pathToTravel[0], visionRange);
 
             float t = Time.deltaTime * travelSpeed;
 
@@ -85,6 +93,7 @@ namespace HexMap
                 a = c;
                 b = pathToTravel[i - 1].Position;
                 c = (b + pathToTravel[i].Position) * 0.5f;
+                Grid.IncreaseVisibility(pathToTravel[i], visionRange);
 
                 for (; t < 1f; t += Time.deltaTime * travelSpeed)
                 {
@@ -95,12 +104,14 @@ namespace HexMap
                     yield return null;
                 }
 
+                Grid.DecreaseVisibility(pathToTravel[i], visionRange);
                 t -= 1f;
             }
 
             a = c;
-            b = pathToTravel[pathToTravel.Count - 1].Position;
+            b = location.Position;
             c = b;
+            Grid.IncreaseVisibility(location, visionRange);
 
             for (; t < 1f; t += Time.deltaTime * travelSpeed)
             {
@@ -141,6 +152,11 @@ namespace HexMap
 
         public void Die()
         {
+            if (location != null)
+            {
+                Grid.DecreaseVisibility(location, visionRange);
+            }
+
             location.Unit = null;
             Destroy(gameObject);
         }

@@ -23,7 +23,7 @@ namespace HexMap
 
                 Shader.SetGlobalTexture("_HexCellData", cellTexture);
             }
-            
+
             Shader.SetGlobalVector("_HexCellData_TexelSize", new Vector4(1f / x, 1f / z, x, z));
 
             if (cellTextureData == null || cellTextureData.Length != x * z)
@@ -44,6 +44,12 @@ namespace HexMap
         public void RefreshTerrain(HexCell cell)
         {
             cellTextureData[cell.Index].a = (byte)cell.TerrainTypeIndex;
+            shouldRefresh = true;
+        }
+
+        public void RefreshVisibility(HexCell cell)
+        {
+            cellTextureData[cell.Index].r = cell.IsVisible ? (byte)255 : (byte)0;
             shouldRefresh = true;
         }
 

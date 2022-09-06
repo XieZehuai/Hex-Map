@@ -607,8 +607,8 @@ namespace HexMap
         {
             EdgeVertices e2 = EdgeVertices.TerraceLerp(begin, end, 1);
             Color w2 = HexMetrics.TerraceLerp(weights1, weights2, 1);
-            float i1 = beginCell.TerrainTypeIndex;
-            float i2 = endCell.TerrainTypeIndex;
+            float i1 = beginCell.Index;
+            float i2 = endCell.Index;
 
             TriangulateEdgeStrip(begin, weights1, i1, e2, w2, i2, hasRoad);
 

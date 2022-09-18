@@ -184,7 +184,8 @@ namespace HexMap
             if (!cell.IsUnderWater)
             {
                 bool reversed = cell.HasIncomingRiver;
-                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
+                Vector3 indices = new Vector3(cell.Index, cell.Index, cell.Index);
+                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed, indices);
 
                 center.y = m.v2.y = m.v4.y = cell.RiverSurfaceY;
                 rivers.AddTriangle(center, m.v2, m.v4);
@@ -196,6 +197,8 @@ namespace HexMap
                 {
                     rivers.AddTriangleUV(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
                 }
+
+                rivers.AddTriangleCellData(indices, weights1);
             }
         }
 
@@ -258,8 +261,8 @@ namespace HexMap
             if (!cell.IsUnderWater)
             {
                 bool reversed = cell.IncomingRiver == direction; // 是否逆流
-                TriangulateRiverQuad(centerL, centerR, m.v2, m.v4, cell.RiverSurfaceY, 0.4f, reversed);
-                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed);
+                TriangulateRiverQuad(centerL, centerR, m.v2, m.v4, cell.RiverSurfaceY, 0.4f, reversed, indices);
+                TriangulateRiverQuad(m.v2, m.v4, e.v2, e.v4, cell.RiverSurfaceY, 0.6f, reversed, indices);
             }
         }
 
@@ -382,8 +385,8 @@ namespace HexMap
             water.AddTriangle(center, e1.v2, e1.v3);
             water.AddTriangle(center, e1.v3, e1.v4);
             water.AddTriangle(center, e1.v4, e1.v5);
-            
-            Vector3 indices = new Vector3(cell.Index, cell.Index, cell.Index);
+
+            Vector3 indices = new Vector3(cell.Index, neighbor.Index, cell.Index);
             water.AddTriangleCellData(indices, weights1);
             water.AddTriangleCellData(indices, weights1);
             water.AddTriangleCellData(indices, weights1);
@@ -397,7 +400,7 @@ namespace HexMap
             // 如果当前海岸连接着一条河流，说明有水从河流流入到当前水域或水从当前水域流入河流
             if (cell.HasRiverThroughEdge(direction))
             {
-                TriangulateEstuary(e1, e2, cell.HasIncomingRiver && cell.IncomingRiver == direction);
+                TriangulateEstuary(e1, e2, cell.HasIncomingRiver && cell.IncomingRiver == direction, indices);
             }
             else
             {
@@ -410,6 +413,10 @@ namespace HexMap
                 waterShore.AddQuadUV(0f, 0f, 0f, 1f);
                 waterShore.AddQuadUV(0f, 0f, 0f, 1f);
                 waterShore.AddQuadUV(0f, 0f, 0f, 1f);
+                waterShore.AddQuadCellData(indices, weights1, weights2);
+                waterShore.AddQuadCellData(indices, weights1, weights2);
+                waterShore.AddQuadCellData(indices, weights1, weights2);
+                waterShore.AddQuadCellData(indices, weights1, weights2);
             }
 
             // 生成当前单元格，相邻单元格和下一方向上的相邻单元格中间的三角形水域
@@ -426,18 +433,22 @@ namespace HexMap
                 waterShore.AddTriangleUV(new Vector2(0f, 0f),
                                          new Vector2(0f, 1f),
                                          new Vector2(0f, nextNeighbor.IsUnderWater ? 0f : 1f));
+                indices.z = nextNeighbor.Index;
+                waterShore.AddTriangleCellData(indices, weights1, weights2, weights3);
             }
         }
 
         /// <summary>
         /// 当接近海岸的水域连接着一条河流时，这部分水域被视为河口
         /// </summary>
-        private void TriangulateEstuary(EdgeVertices e1, EdgeVertices e2, bool incomingRiver)
+        private void TriangulateEstuary(EdgeVertices e1, EdgeVertices e2, bool incomingRiver, Vector3 indices)
         {
             waterShore.AddTriangle(e2.v1, e1.v2, e1.v1);
             waterShore.AddTriangle(e2.v5, e1.v5, e1.v4);
             waterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
             waterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+            waterShore.AddTriangleCellData(indices, weights2, weights1, weights1);
+            waterShore.AddTriangleCellData(indices, weights2, weights1, weights1);
 
             estuaries.AddQuad(e2.v1, e1.v2, e2.v2, e1.v3);
             estuaries.AddTriangle(e1.v3, e2.v2, e2.v4);
@@ -448,6 +459,9 @@ namespace HexMap
             estuaries.AddTriangleUV(new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(1f, 1f));
             estuaries.AddQuadUV(new Vector2(0f, 0f), new Vector2(0f, 0f),
                                 new Vector2(1f, 1f), new Vector2(0f, 1f));
+            estuaries.AddQuadCellData(indices, weights2, weights1, weights2, weights1);
+            estuaries.AddTriangleCellData(indices, weights1, weights2, weights2);
+            estuaries.AddQuadCellData(indices, weights1, weights2);
 
             if (incomingRiver)
             {
@@ -524,6 +538,7 @@ namespace HexMap
             if (hasRiver)
             {
                 e2.v3.y = neighbor.StreamBedY;
+                Vector3 indices = new Vector3(cell.Index, neighbor.Index, cell.Index);
 
                 if (!cell.IsUnderWater) // 单元格不处于水中
                 {
@@ -531,19 +546,20 @@ namespace HexMap
                     {
                         TriangulateRiverQuad(e1.v2, e1.v4, e2.v2, e2.v4,
                             cell.RiverSurfaceY, neighbor.RiverSurfaceY, 0.8f,
-                            cell.HasIncomingRiver && cell.IncomingRiver == direction);
+                            cell.HasIncomingRiver && cell.IncomingRiver == direction,
+                            indices);
                     }
                     else if (cell.Elevation > neighbor.WaterLevel) // 相邻单元格处于水中且水位低于当前单元格的海拔
                     {
                         TriangulateWaterfallInWater(e1.v2, e1.v4, e2.v2, e2.v4,
-                            cell.RiverSurfaceY, neighbor.RiverSurfaceY, neighbor.WaterSurfaceY);
+                            cell.RiverSurfaceY, neighbor.RiverSurfaceY, neighbor.WaterSurfaceY, indices);
                     }
                 }
                 // 单元格处于水中且相邻单元格海拔高于水位高度，同样需要生成瀑布
                 else if (!neighbor.IsUnderWater && neighbor.Elevation > cell.WaterLevel)
                 {
                     TriangulateWaterfallInWater(e2.v4, e2.v2, e1.v4, e1.v2,
-                        neighbor.RiverSurfaceY, cell.RiverSurfaceY, cell.WaterSurfaceY);
+                        neighbor.RiverSurfaceY, cell.RiverSurfaceY, cell.WaterSurfaceY, indices);
                 }
             }
 
@@ -654,7 +670,7 @@ namespace HexMap
         /// <param name="y2">河流低处的水面高度</param>
         /// <param name="waterY">河流流向的水域水面高度</param>
         private void TriangulateWaterfallInWater(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,
-                                                 float y1, float y2, float waterY)
+                                                 float y1, float y2, float waterY, Vector3 indices)
         {
             v1.y = v2.y = y1;
             v3.y = v4.y = y2;
@@ -670,6 +686,7 @@ namespace HexMap
 
             rivers.AddQuadUnperturbed(v1, v2, v3, v4);
             rivers.AddQuadUV(0f, 1f, 0.8f, 1f);
+            rivers.AddQuadCellData(indices, weights1, weights2);
         }
 
         /// <summary>
@@ -1023,13 +1040,13 @@ namespace HexMap
         }
 
         private void TriangulateRiverQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,
-            float y, float v, bool reversed)
+            float y, float v, bool reversed, Vector3 indices)
         {
-            TriangulateRiverQuad(v1, v2, v3, v4, y, y, v, reversed);
+            TriangulateRiverQuad(v1, v2, v3, v4, y, y, v, reversed, indices);
         }
 
         private void TriangulateRiverQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,
-            float y1, float y2, float v, bool reversed)
+            float y1, float y2, float v, bool reversed, Vector3 indices)
         {
             v1.y = v2.y = y1;
             v3.y = v4.y = y2;
@@ -1043,6 +1060,8 @@ namespace HexMap
             {
                 rivers.AddQuadUV(0f, 1f, v, v + 0.2f);
             }
+
+            rivers.AddQuadCellData(indices, weights1, weights2);
         }
     }
 }

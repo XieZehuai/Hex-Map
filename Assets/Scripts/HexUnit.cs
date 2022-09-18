@@ -10,6 +10,7 @@ namespace HexMap
         public static HexUnit unitPrefab;
 
         private HexCell location;
+        private HexCell currentTravelLocation;
         private float orientation;
         private List<HexCell> pathToTravel;
 
@@ -54,6 +55,13 @@ namespace HexMap
             if (location)
             {
                 transform.localPosition = location.Position;
+
+                if (currentTravelLocation)
+                {
+                    Grid.IncreaseVisibility(location, visionRange);
+                    Grid.DecreaseVisibility(currentTravelLocation, visionRange);
+                    currentTravelLocation = null;
+                }
             }
         }
 
@@ -84,15 +92,16 @@ namespace HexMap
             Vector3 a, b, c = pathToTravel[0].Position;
 
             yield return LookAt(pathToTravel[1].Position);
-            Grid.DecreaseVisibility(pathToTravel[0], visionRange);
+            Grid.DecreaseVisibility(currentTravelLocation ?? pathToTravel[0], visionRange);
 
             float t = Time.deltaTime * travelSpeed;
 
             for (int i = 1; i < pathToTravel.Count; i++)
             {
+                currentTravelLocation = pathToTravel[i];
                 a = c;
                 b = pathToTravel[i - 1].Position;
-                c = (b + pathToTravel[i].Position) * 0.5f;
+                c = (b + currentTravelLocation.Position) * 0.5f;
                 Grid.IncreaseVisibility(pathToTravel[i], visionRange);
 
                 for (; t < 1f; t += Time.deltaTime * travelSpeed)
@@ -107,6 +116,7 @@ namespace HexMap
                 Grid.DecreaseVisibility(pathToTravel[i], visionRange);
                 t -= 1f;
             }
+            currentTravelLocation = null;
 
             a = c;
             b = location.Position;

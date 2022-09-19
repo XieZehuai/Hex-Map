@@ -21,8 +21,24 @@ namespace HexMap
         private MeshCollider meshCollider;
 
         [NonSerialized] private List<Vector3> vertices;
-        [NonSerialized] private List<Color> cellWeights;
+
+        /// <summary>
+        /// <para>
+        /// 三角形对应地形的索引，一个三角形可以拥有 1 - 3 种地形，三个顶点用相同的值，实际每种地形
+        /// 占比通过三个 cellWeight 值设置
+        /// </para>
+        /// 
+        /// 当顶点在单元格内时，对应一种地形，xyz 分量使用相同的值；当顶点在单元格边缘上时，
+        /// 当顶点在单元格边缘上时，被两个单元格共享，对应两种地形，xz 分量为第一个单元格的
+        /// 地形，y 分量为第二个单元格的地形；当顶点在三个单元格之间的连接区域时，对应三种地
+        /// 形，x 分量为第一个单元格的地形，y 分量为第二个单元格的地形，z 分量为第三个单元格的地形。
+        /// </summary>
         [NonSerialized] private List<Vector3> cellIndices;
+        /// <summary>
+        /// 顶点对应每种地形的比例，r 对应第一种， g 对应第二种, b 对应第三种，实际地形为三种地形的线性插值结果
+        /// </summary>
+        [NonSerialized] private List<Color> cellWeights;
+
         [NonSerialized] private List<Vector2> uvs;
         [NonSerialized] private List<Vector2> uv2s;
         [NonSerialized] private List<int> triangles;

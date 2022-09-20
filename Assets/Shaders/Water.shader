@@ -21,6 +21,8 @@
         #include "Water.cginc"
         #include "HexCellData.cginc"
 
+        #pragma multi_compile _ HEX_MAP_EDIT_MODE
+
         sampler2D _MainTex;
 
         struct Input

@@ -5,10 +5,9 @@ using TMPro;
 
 namespace HexMap.UI
 {
-
     public class SaveLoadMenu : MonoBehaviour
     {
-        public const int SAVE_FILE_VERSION = 2;
+        public const int SAVE_FILE_VERSION = 3;
 
         public TextMeshProUGUI menuLabel;
         public TextMeshProUGUI actionButtonLabel;
@@ -144,7 +143,7 @@ namespace HexMap.UI
             {
                 int header = reader.ReadInt32();
 
-                if (header <= 2)
+                if (header <= SAVE_FILE_VERSION)
                 {
                     hexGrid.Load(reader, header);
                     HexMapCamera.Instance.ValidatePosition();

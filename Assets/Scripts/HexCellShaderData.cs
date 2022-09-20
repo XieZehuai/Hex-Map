@@ -2,9 +2,18 @@
 
 namespace HexMap
 {
+    /// <summary>
+    /// 把单元格的数据存储到一张纹理中，并在 Shader 中采样实现各种效果
+    /// </summary>
     public class HexCellShaderData : MonoBehaviour
     {
         private Texture2D cellTexture;
+        /// <summary>
+        /// 每个单元格的数据
+        /// 
+        /// <para>r 通道保存单元格的可见性，0 表示单元格处于迷雾之中，255 表示单元格可见，用于实现战争迷雾效果；</para>
+        /// <para>g 通道的值表示单元格是否被探索过，0 表示未被探索过，1 表示被探索过；</para>
+        /// </summary>
         private Color32[] cellTextureData;
 
         private bool shouldRefresh = false;
@@ -50,6 +59,7 @@ namespace HexMap
         public void RefreshVisibility(HexCell cell)
         {
             cellTextureData[cell.Index].r = cell.IsVisible ? (byte)255 : (byte)0;
+            cellTextureData[cell.Index].g = cell.IsExplored ? (byte)255 : (byte)0;
             shouldRefresh = true;
         }
 

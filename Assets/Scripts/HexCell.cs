@@ -23,6 +23,7 @@ namespace HexMap
         public HexCellShaderData ShaderData { get; set; }
         public int Index { get; set; }
         public bool IsVisible => visibility > 0;
+        public bool IsExplored { get; private set; }
 
         #region 单元格基础属性
         private int elevation = int.MinValue;
@@ -552,6 +553,7 @@ namespace HexMap
             visibility++;
             if (visibility == 1)
             {
+                IsExplored = true;
                 ShaderData.RefreshVisibility(this);
             }
         }
@@ -602,10 +604,12 @@ namespace HexMap
                     roadFlags |= 1 << i;
                 }
             }
+
             writer.Write((byte)roadFlags);
+            writer.Write(IsExplored);
         }
 
-        public void Load(BinaryReader reader)
+        public void Load(BinaryReader reader, int header)
         {
             terrainTypeIndex = reader.ReadByte();
             ShaderData.RefreshTerrain(this);
@@ -647,6 +651,9 @@ namespace HexMap
             }
 
             RefreshPosition();
+
+            IsExplored = header >= 3 ? reader.ReadBoolean() : false;
+            ShaderData.RefreshVisibility(this);
         }
     }
 }

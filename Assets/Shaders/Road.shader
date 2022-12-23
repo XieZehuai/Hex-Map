@@ -2,10 +2,10 @@
 {
     Properties
     {
-        _Color ("Color", Color) = (1,1,1,1)
+        _Color ("Color", Color) = (1, 1, 1, 1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
+        _Glossiness ("Smoothness", Range(0, 1)) = 0.5
+        _Specular ("Specular", Color) = (0.2, 0.2, 0.2)
 
         _RoadDissolve ("Road Dissolve", Range(0, 1)) = 0.4
         _RoadSolid ("Road Solid", Range(0, 1)) = 0.7
@@ -23,7 +23,7 @@
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows decal:blend vertex:vert
+        #pragma surface surf StandardSpecular fullforwardshadows decal:blend vertex:vert
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
 
@@ -37,11 +37,11 @@
         {
             float2 uv_MainTex;
             float3 worldPos;
-            float visibility;
+            float2 visibility;
         };
 
         half _Glossiness;
-        half _Metallic;
+        fixed3 _Specular;
         fixed4 _Color;
         float _RoadDissolve;
         float _RoadSolid;
@@ -60,24 +60,26 @@
             float4 cell0 = GetCellData(v, 0);
             float4 cell1 = GetCellData(v, 1);
 
-            data.visibility = cell0.x * v.color.x + cell1.x * v.color.y;
-            data.visibility = lerp(0.25, 1, data.visibility);
+            data.visibility.x = cell0.x * v.color.x + cell1.x * v.color.y;
+            data.visibility.x = lerp(0.25, 1, data.visibility.x);
+            data.visibility.y = cell0.y * v.color.x + cell1.y * v.color.y;
         }
 
-        void surf(Input IN, inout SurfaceOutputStandard o)
+        void surf(Input IN, inout SurfaceOutputStandardSpecular o)
         {
-            // Albedo comes from a texture tinted by color
             float4 noise = tex2D(_MainTex, IN.worldPos.xz * 0.025);
-            fixed4 c = _Color * ((noise.y * 0.75 + 0.25) * IN.visibility);
+            fixed4 c = _Color * ((noise.y * 0.75 + 0.25) * IN.visibility.x);
             float blend = IN.uv_MainTex.x;
             blend *= noise.x + 0.5;
             blend = smoothstep(_RoadDissolve, _RoadSolid, blend);
 
+            float explored = IN.visibility.y;
+
             o.Albedo = c.rgb;
-            // Metallic and smoothness come from slider variables
-            o.Metallic = _Metallic;
+            o.Specular = _Specular * explored;
             o.Smoothness = _Glossiness;
-            o.Alpha = blend;
+            o.Occlusion = explored;
+            o.Alpha = blend * explored;
         }
         ENDCG
     }

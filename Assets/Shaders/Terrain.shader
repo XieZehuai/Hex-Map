@@ -6,7 +6,8 @@
         _MainTex ("Terrain Texture Array", 2DArray) = "white" {}
         _GridTex ("Grid Texture", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
+        _Specular ("Specular", Color) = (0.2, 0.2, 0.2)
+        _BackgroundColor ("Background Color", Color) = (0, 0, 0)
     }
     SubShader
     {
@@ -15,7 +16,7 @@
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows vertex:vert
+        #pragma surface surf StandardSpecular fullforwardshadows vertex:vert
         #pragma target 3.5
 
         #pragma multi_compile _ GRID_ON
@@ -34,8 +35,9 @@
         UNITY_DECLARE_TEX2DARRAY(_MainTex);
         sampler2D _GridTex;
         half _Glossiness;
-        half _Metallic;
+        fixed3 _Specular;
         fixed4 _Color;
+        half3 _BackgroundColor;
 
         UNITY_INSTANCING_BUFFER_START(Props)
         UNITY_INSTANCING_BUFFER_END(Props)
@@ -69,7 +71,7 @@
             return c * (IN.color[index] * IN.visibility[index]);
         }
 
-        void surf(Input IN, inout SurfaceOutputStandard o)
+        void surf(Input IN, inout SurfaceOutputStandardSpecular o)
         {
             fixed4 c = GetTerrainColor(IN, 0) + GetTerrainColor(IN, 1) + GetTerrainColor(IN, 2);
 
@@ -84,9 +86,11 @@
             float explored = IN.visibility.w;
             o.Albedo = c.rgb * grid * _Color * explored;
 
-            o.Metallic = _Metallic;
+            o.Specular = _Specular * explored;
             o.Smoothness = _Glossiness;
+            o.Occlusion = explored;
             o.Alpha = c.a;
+            o.Emission = _BackgroundColor * (1 - explored);
         }
         ENDCG
     }

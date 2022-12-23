@@ -7,6 +7,8 @@ namespace HexMap
 {
     public class HexUnit : MonoBehaviour
     {
+        public const int SPEED_PER_TURN = 24;
+
         public static HexUnit unitPrefab;
 
         private HexCell location;
@@ -46,6 +48,14 @@ namespace HexMap
             }
         }
 
+        public int Speed
+        {
+            get
+            {
+                return SPEED_PER_TURN;
+            }
+        }
+
         public HexGrid Grid { get; set; }
 
         private void OnEnable()
@@ -72,7 +82,35 @@ namespace HexMap
 
         public bool IsValidDestination(HexCell cell)
         {
-            return !cell.IsUnderWater && cell.Unit == null;
+            return cell.IsExplored && !cell.IsUnderWater && cell.Unit == null;
+        }
+
+        public int GetMoveCost(HexCell fromCell, HexCell toCell, HexDirection direction)
+        {
+            HexEdgeType edgeType = fromCell.GetEdgeType(toCell);
+
+            if (edgeType == HexEdgeType.Cliff)
+            {
+                return -1;
+            }
+
+            int moveCost; // 从当前单元格移动到邻居单元格的消耗
+            if (fromCell.HasRoadThroughEdge(direction))
+            {
+                moveCost = 1;
+            }
+            // 当前单元格与相邻单元格之间被墙壁隔开且中间没有道路
+            else if (fromCell.Walled != toCell.Walled)
+            {
+                return -1;
+            }
+            else
+            {
+                moveCost = edgeType == HexEdgeType.Flat ? 5 : 10;
+                moveCost += toCell.UrbanLevel + toCell.FarmLevel + toCell.PlantLevel;
+            }
+
+            return moveCost;
         }
 
         public void Travel(List<HexCell> path)

@@ -5,8 +5,6 @@ namespace HexMap.UI
 {
     public class HexGameUI : MonoBehaviour
     {
-        public const int SPEED_PER_TURN = 24;
-
         public HexGrid grid;
 
         private HexCell currentCell;
@@ -44,7 +42,7 @@ namespace HexMap.UI
             {
                 Shader.EnableKeyword("HEX_MAP_EDIT_MODE");
             }
-            else 
+            else
             {
                 Shader.DisableKeyword("HEX_MAP_EDIT_MODE");
             }
@@ -80,7 +78,7 @@ namespace HexMap.UI
             {
                 if (currentCell != null && selectedUnit.IsValidDestination(currentCell))
                 {
-                    grid.FindPath(selectedUnit.Location, currentCell, SPEED_PER_TURN);
+                    grid.FindPath(selectedUnit.Location, currentCell, selectedUnit);
                 }
                 else
                 {

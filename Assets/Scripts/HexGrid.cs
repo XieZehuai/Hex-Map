@@ -231,19 +231,20 @@ namespace HexMap
             return cells[x + z * cellCountX];
         }
 
-        public void FindPath(HexCell fromCell, HexCell toCell, int speed)
+        public void FindPath(HexCell fromCell, HexCell toCell, HexUnit unit)
         {
             ClearPath();
             currentPathFrom = fromCell;
             currentPathTo = toCell;
-            currentPathExists = SearchPath(fromCell, toCell, speed);
-            ShowPath(speed);
+            currentPathExists = SearchPath(fromCell, toCell, unit);
+            ShowPath(unit.Speed);
         }
 
         // speed 表示单个回合可以移动的最大距离，因为了距离因素后，寻路时就不能只考虑最短距离，
         // 而是要同时考虑距离和回合数，有点像背包算法
-        private bool SearchPath(HexCell fromCell, HexCell toCell, int speed)
+        private bool SearchPath(HexCell fromCell, HexCell toCell, HexUnit unit)
         {
+            int speed = unit.Speed;
             searchFrontierPhase += 2;
 
             if (searchFrontier == null)
@@ -279,24 +280,10 @@ namespace HexMap
                     if (neighbor == null || neighbor.SearchPhase > searchFrontierPhase) continue;
                     if (neighbor.IsUnderWater || neighbor.Unit != null) continue;
 
-                    HexEdgeType edgeType = current.GetEdgeType(neighbor);
-                    if (edgeType == HexEdgeType.Cliff) continue;
+                    if (!unit.IsValidDestination(neighbor)) continue;
 
-                    int moveCost; // 从当前单元格移动到邻居单元格的消耗
-                    if (current.HasRoadThroughEdge(d))
-                    {
-                        moveCost = 1;
-                    }
-                    // 当前单元格与相邻单元格之间被墙壁隔开且中间没有道路
-                    else if (current.Walled != neighbor.Walled)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        moveCost = edgeType == HexEdgeType.Flat ? 5 : 10;
-                        moveCost += neighbor.UrbanLevel + neighbor.FarmLevel + neighbor.PlantLevel;
-                    }
+                    int moveCost = unit.GetMoveCost(current, neighbor, d);
+                    if (moveCost < 0) continue;
 
                     int distance = current.Distance + moveCost; // 从当前单元格移动到邻居单元格的实际距离
                     int turn = (distance - 1) / speed; // 需要的回合数

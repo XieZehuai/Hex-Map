@@ -18,13 +18,24 @@ namespace HexMap
         [SerializeField] private HexCell[] neighbors = default; // 将字段标记为 SerializeField 可实现热重载
 
         private int visibility;
+        private bool explored;
 
         public HexUnit Unit { get; set; }
         public HexCellShaderData ShaderData { get; set; }
         public int Index { get; set; }
-        public bool IsVisible => visibility > 0;
-        public bool IsExplored { get; private set; }
-
+        public bool Explorable { get; set; }
+        public bool IsVisible => visibility > 0 && Explorable;
+        public bool IsExplored
+        {
+            get
+            {
+                return explored && Explorable;
+            }
+            private set
+            {
+                explored = value;
+            }
+        }
         public int ViewElevation
         {
             get

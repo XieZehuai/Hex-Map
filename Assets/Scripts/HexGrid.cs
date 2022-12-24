@@ -152,6 +152,8 @@ namespace HexMap
             cell.ShaderData = cellShaderData;
             cell.Index = i;
 
+            cell.Explorable = x > 0 && z > 0 && x < cellCountX - 1 && z < cellCountZ - 1;
+
             // 设置单元格对应的邻居关系
             if (x > 0)
             {
@@ -430,8 +432,13 @@ namespace HexMap
                     if (neighbor == null || neighbor.SearchPhase > searchFrontierPhase) continue;
 
                     int distance = current.Distance + 1;
+
                     if (distance + neighbor.ViewElevation > range ||
-                        distance > fromCoordinates.DistanceTo(neighbor.coordinates)) continue;
+                        distance > fromCoordinates.DistanceTo(neighbor.coordinates) ||
+                        !neighbor.Explorable)
+                    {
+                        continue;
+                    }
 
                     if (neighbor.SearchPhase < searchFrontierPhase)
                     {

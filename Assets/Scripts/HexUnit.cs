@@ -18,7 +18,14 @@ namespace HexMap
 
         private const float travelSpeed = 4f;
         private const float rotationSpeed = 180f;
-        private const int visionRange = 3;
+
+        public int VisionRange
+        {
+            get
+            {
+                return 3;
+            }
+        }
 
         public HexCell Location
         {
@@ -27,13 +34,13 @@ namespace HexMap
             {
                 if (location != null)
                 {
-                    Grid.DecreaseVisibility(location, visionRange);
+                    Grid.DecreaseVisibility(location, VisionRange);
                     location.Unit = null;
                 }
 
                 location = value;
                 value.Unit = this;
-                Grid.IncreaseVisibility(location, visionRange);
+                Grid.IncreaseVisibility(location, VisionRange);
                 transform.localPosition = value.Position;
             }
         }
@@ -68,8 +75,8 @@ namespace HexMap
 
                 if (currentTravelLocation)
                 {
-                    Grid.IncreaseVisibility(location, visionRange);
-                    Grid.DecreaseVisibility(currentTravelLocation, visionRange);
+                    Grid.IncreaseVisibility(location, VisionRange);
+                    Grid.DecreaseVisibility(currentTravelLocation, VisionRange);
                     currentTravelLocation = null;
                 }
             }
@@ -130,7 +137,7 @@ namespace HexMap
             Vector3 a, b, c = pathToTravel[0].Position;
 
             yield return LookAt(pathToTravel[1].Position);
-            Grid.DecreaseVisibility(currentTravelLocation ?? pathToTravel[0], visionRange);
+            Grid.DecreaseVisibility(currentTravelLocation ?? pathToTravel[0], VisionRange);
 
             float t = Time.deltaTime * travelSpeed;
 
@@ -140,7 +147,7 @@ namespace HexMap
                 a = c;
                 b = pathToTravel[i - 1].Position;
                 c = (b + currentTravelLocation.Position) * 0.5f;
-                Grid.IncreaseVisibility(pathToTravel[i], visionRange);
+                Grid.IncreaseVisibility(pathToTravel[i], VisionRange);
 
                 for (; t < 1f; t += Time.deltaTime * travelSpeed)
                 {
@@ -151,7 +158,7 @@ namespace HexMap
                     yield return null;
                 }
 
-                Grid.DecreaseVisibility(pathToTravel[i], visionRange);
+                Grid.DecreaseVisibility(pathToTravel[i], VisionRange);
                 t -= 1f;
             }
             currentTravelLocation = null;
@@ -159,7 +166,7 @@ namespace HexMap
             a = c;
             b = location.Position;
             c = b;
-            Grid.IncreaseVisibility(location, visionRange);
+            Grid.IncreaseVisibility(location, VisionRange);
 
             for (; t < 1f; t += Time.deltaTime * travelSpeed)
             {
@@ -202,7 +209,7 @@ namespace HexMap
         {
             if (location != null)
             {
-                Grid.DecreaseVisibility(location, visionRange);
+                Grid.DecreaseVisibility(location, VisionRange);
             }
 
             location.Unit = null;

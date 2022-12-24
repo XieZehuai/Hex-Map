@@ -20,7 +20,10 @@ namespace HexMap
         private Color32[] cellTextureData;
         private List<HexCell> transitioningCells = new List<HexCell>();
 
-        private bool shouldRefresh = false;
+        private bool shouldRefresh;
+        private bool needsVisibilityReset;
+
+        public HexGrid Grid { get; set; }
 
         public bool ImmediateMode { get; set; }
 
@@ -81,8 +84,20 @@ namespace HexMap
             shouldRefresh = true;
         }
 
+        public void ViewElevationChanged()
+        {
+            needsVisibilityReset = true;
+            shouldRefresh = true;
+        }
+
         private void LateUpdate()
         {
+            if (needsVisibilityReset)
+            {
+                needsVisibilityReset = false;
+                Grid.ResetVisibility();
+            }
+
             int delta = (int)(Time.deltaTime * TRANSITION_SPEED);
             if (delta == 0)
             {

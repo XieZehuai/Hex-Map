@@ -25,6 +25,14 @@ namespace HexMap
         public bool IsVisible => visibility > 0;
         public bool IsExplored { get; private set; }
 
+        public int ViewElevation
+        {
+            get
+            {
+                return elevation >= waterLevel ? elevation : waterLevel;
+            }
+        }
+
         #region 单元格基础属性
         private int elevation = int.MinValue;
         private int terrainTypeIndex;
@@ -52,7 +60,13 @@ namespace HexMap
             {
                 if (elevation == value) return;
 
+                int originalViewElevation = ViewElevation;
                 elevation = value;
+                if (ViewElevation != originalViewElevation)
+                {
+                    ShaderData.ViewElevationChanged();
+                }
+
                 RefreshPosition();
 
                 /*
@@ -137,7 +151,13 @@ namespace HexMap
             {
                 if (waterLevel == value) return;
 
+                int originalViewElevation = ViewElevation;
                 waterLevel = value;
+                if (ViewElevation != originalViewElevation)
+                {
+                    ShaderData.ViewElevationChanged();
+                }
+
                 ValidateRivers();
                 Refresh();
             }
@@ -563,6 +583,15 @@ namespace HexMap
             visibility--;
             if (visibility == 0)
             {
+                ShaderData.RefreshVisibility(this);
+            }
+        }
+
+        public void ResetVisibility()
+        {
+            if (visibility > 0)
+            {
+                visibility = 0;
                 ShaderData.RefreshVisibility(this);
             }
         }

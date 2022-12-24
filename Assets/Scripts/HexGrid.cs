@@ -530,6 +530,9 @@ namespace HexMap
                 cellShaderData.Initialize(x, z);
             }
 
+            bool originalImmediateMode = cellShaderData.ImmediateMode;
+            cellShaderData.ImmediateMode = true;
+
             for (int i = 0; i < cells.Length; i++)
             {
                 cells[i].Load(reader, header);
@@ -547,6 +550,8 @@ namespace HexMap
                     HexUnit.Load(reader, this);
                 }
             }
+
+            cellShaderData.ImmediateMode = originalImmediateMode;
         }
     }
 }

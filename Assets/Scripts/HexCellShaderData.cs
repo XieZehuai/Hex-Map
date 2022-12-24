@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace HexMap
 {
@@ -7,16 +8,21 @@ namespace HexMap
     /// </summary>
     public class HexCellShaderData : MonoBehaviour
     {
+        private const float TRANSITION_SPEED = 255f;
+
         private Texture2D cellTexture;
         /// <summary>
         /// 每个单元格的数据
         /// 
         /// <para>r 通道保存单元格的可见性，0 表示单元格处于迷雾之中，255 表示单元格可见，用于实现战争迷雾效果；</para>
-        /// <para>g 通道的值表示单元格是否被探索过，0 表示未被探索过，1 表示被探索过；</para>
+        /// <para>g 通道的值表示单元格是否被探索过，0 表示未被探索过，255 表示被探索过；</para>
         /// </summary>
         private Color32[] cellTextureData;
+        private List<HexCell> transitioningCells = new List<HexCell>();
 
         private bool shouldRefresh = false;
+
+        public bool ImmediateMode { get; set; }
 
         public void Initialize(int x, int z)
         {
@@ -47,6 +53,7 @@ namespace HexMap
                 }
             }
 
+            transitioningCells.Clear();
             shouldRefresh = true;
         }
 
@@ -58,19 +65,80 @@ namespace HexMap
 
         public void RefreshVisibility(HexCell cell)
         {
-            cellTextureData[cell.Index].r = cell.IsVisible ? (byte)255 : (byte)0;
-            cellTextureData[cell.Index].g = cell.IsExplored ? (byte)255 : (byte)0;
+            int index = cell.Index;
+
+            if (ImmediateMode)
+            {
+                cellTextureData[index].r = cell.IsVisible ? (byte)255 : (byte)0;
+                cellTextureData[index].g = cell.IsExplored ? (byte)255 : (byte)0;
+            }
+            else if (cellTextureData[index].b != 255)
+            {
+                cellTextureData[index].b = 255;
+                transitioningCells.Add(cell);
+            }
+
             shouldRefresh = true;
         }
 
         private void LateUpdate()
         {
-            if (shouldRefresh)
+            int delta = (int)(Time.deltaTime * TRANSITION_SPEED);
+            if (delta == 0)
             {
-                cellTexture.SetPixels32(cellTextureData);
-                cellTexture.Apply();
-                shouldRefresh = false;
+                delta = 1;
             }
+
+            for (int i = 0; i < transitioningCells.Count; i++)
+            {
+                if (!UpdateCellData(transitioningCells[i], delta))
+                {
+                    transitioningCells[i--] = transitioningCells[transitioningCells.Count - 1];
+                    transitioningCells.RemoveAt(transitioningCells.Count - 1);
+                }
+            }
+
+            cellTexture.SetPixels32(cellTextureData);
+            cellTexture.Apply();
+            shouldRefresh = transitioningCells.Count > 0;
+        }
+
+        private bool UpdateCellData(HexCell cell, int delta)
+        {
+            int index = cell.Index;
+            Color32 data = cellTextureData[index];
+            bool stillUpdating = false;
+
+            if (cell.IsExplored && data.g < 255)
+            {
+                stillUpdating = true;
+                int t = data.g + delta;
+                data.g = t >= 255 ? (byte)255 : (byte)t;
+            }
+
+            if (cell.IsVisible)
+            {
+                if (data.r < 255)
+                {
+                    stillUpdating = true;
+                    int t = data.r + delta;
+                    data.r = t >= 255 ? (byte)255 : (byte)t;
+                }
+            }
+            else if (data.r > 0)
+            {
+                stillUpdating = true;
+                int t = data.r - delta;
+                data.r = t < 0 ? (byte)0 : (byte)t;
+            }
+
+            if (!stillUpdating)
+            {
+                data.b = 0;
+            }
+
+            cellTextureData[index] = data;
+            return stillUpdating;
         }
     }
 }
